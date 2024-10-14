@@ -1,6 +1,7 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
+from retry import retry
 
 # Firebase initialization (outside Streamlit components)
 def initialize_firebase():
@@ -24,6 +25,7 @@ def initialize_firebase():
     else:
         print("Firebase is already initialized.")
 
+@retry(exceptions=Exception, tries=3, delay=5, backoff=2, jitter=(1, 3))
 def fetch_all_questions():
     try:
         db = firestore.client()
@@ -39,7 +41,7 @@ def fetch_all_questions():
         return questions
     except Exception as e:
         st.error(f"Error retrieving questions: {e}")
-        return []
+        raise  # Re-raise the exception to trigger the retry
 
 def main():
     # Initialize Firebase
