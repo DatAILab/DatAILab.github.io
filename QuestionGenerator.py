@@ -39,7 +39,7 @@ def fetch_all_questions():
         return questions
     except Exception as e:
         st.error(f"Error retrieving questions: {e}")
-        return []  # Return an empty list on error
+        return []
 
 def main():
     # Initialize Firebase
