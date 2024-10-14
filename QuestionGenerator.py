@@ -6,7 +6,20 @@ from firebase_admin import credentials, firestore
 def initialize_firebase():
     if not firebase_admin._apps:  # Check if any Firebase app is already initialized
         print("Initializing Firebase...")
-        cred = credentials.Certificate("C:/Users/Bayram/Desktop/Datailab/Questions/datailab.json")
+        # Use the credentials from the secrets
+        cred = credentials.Certificate({
+            "type": st.secrets["type"],
+            "project_id": st.secrets["project_id"],
+            "private_key_id": st.secrets["private_key_id"],
+            "private_key": st.secrets["private_key"].replace("\\n", "\n"),  # Replace escaped newlines
+            "client_email": st.secrets["client_email"],
+            "client_id": st.secrets["client_id"],
+            "auth_uri": st.secrets["auth_uri"],
+            "token_uri": st.secrets["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["client_x509_cert_url"],
+            "universe_domain": st.secrets["universe_domain"]
+        })
         firebase_admin.initialize_app(cred)
     else:
         print("Firebase is already initialized.")
