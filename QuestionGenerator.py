@@ -1,13 +1,14 @@
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
+from google.cloud import firestore
+from google.oauth2 import service_account
+from retry import retry
 
 # Firebase initialization (outside Streamlit components)
 def initialize_firebase():
-    if not firebase_admin._apps:  # Check if any Firebase app is already initialized
-        print("Initializing Firebase...")
+    if 'db' not in st.session_state:  # Check if Firestore client is already initialized
+        print("Initializing Firestore...")
         # Use the credentials from the secrets
-        cred = credentials.Certificate({
+        credentials = service_account.Credentials.from_service_account_info({
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
             "private_key_id": st.secrets["private_key_id"],
@@ -20,13 +21,14 @@ def initialize_firebase():
             "client_x509_cert_url": st.secrets["client_x509_cert_url"],
             "universe_domain": st.secrets["universe_domain"]
         })
-        firebase_admin.initialize_app(cred)
+        st.session_state.db = firestore.Client(credentials=credentials)
     else:
-        print("Firebase is already initialized.")
+        print("Firestore is already initialized.")
 
+@retry(exceptions=Exception, tries=3, delay=5, backoff=2, jitter=(1, 3))
 def fetch_all_questions():
     try:
-        db = firestore.client()
+        db = st.session_state.db
         questions_ref = db.collection("questions")
         query_snapshot = questions_ref.get()
 
@@ -39,10 +41,10 @@ def fetch_all_questions():
         return questions
     except Exception as e:
         st.error(f"Error retrieving questions: {e}")
-        return []
+        raise  # Re-raise the exception to trigger the retry
 
 def main():
-    # Initialize Firebase
+    # Initialize Firestore
     initialize_firebase()
 
     st.title("Quiz Application")
