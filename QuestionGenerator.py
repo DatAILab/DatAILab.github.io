@@ -2,11 +2,11 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# Firebase initialization (outside Streamlit components)
+# Initialisation de Firebase (en dehors des composants Streamlit)
 def initialize_firebase():
     if not firebase_admin._apps:  # Check if any Firebase app is already initialized
         print("Initializing Firebase...")
-        # Use the credentials from the secrets
+        # Utiliser les informations d'identification des secrets
         cred = credentials.Certificate({
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
@@ -22,7 +22,7 @@ def initialize_firebase():
         })
         firebase_admin.initialize_app(cred)
     else:
-        print("Firebase is already initialized.")
+        print("Firebase est déjà initialisé.")
 
 def fetch_all_questions():
     try:
@@ -34,42 +34,42 @@ def fetch_all_questions():
         for doc in query_snapshot:
             questions.append(doc.to_dict())
 
-        if not questions:  # Ensure there are questions to choose from
-            st.error("No questions found in the database.")
+        if not questions:  # S'assurer qu'il y a des questions à choisir
+            st.error("Aucune question n'a été trouvée dans la base de données.")
         return questions
     except Exception as e:
-        st.error(f"Error retrieving questions: {e}")
+        st.error(f"Erreur lors de la récupération des questions : {e}")
         return []
 
 def main():
-    # Initialize Firebase
+    # Initialiser Firebase
     initialize_firebase()
 
-    st.title("Quiz Application")
+    st.title("Quiz Certification PL-300")
 
-    # Fetch all questions
+    # Récupérer toutes les questions
     questions = fetch_all_questions()
 
-    # Store user's answers in session state
+    # Stocker les réponses de l'utilisateur dans l'état de session
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: None for q in questions}
 
-    # Display all questions with radio buttons
+    # Afficher toutes les questions avec des boutons radio
     for question in questions:
         st.write("**Question:**", question["question_text"])
         
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
 
-        if choices:  # Only display if there are choices
-            selected_answer = st.radio("Choose your answer:", choices, key=question["question_text"])  # No index parameter
-            # Store the user's selected answer
+        if choices:  # Afficher uniquement s'il y a des choix
+            selected_answer = st.radio("Choisissez votre réponse:", choices, key=question["question_text"])  
+            # Stocker la réponse sélectionnée par l'utilisateur
             st.session_state.user_answers[question["question_text"]] = selected_answer
         else:
-            st.warning(f"No choices available for question: {question['question_text']}")
+            st.warning(f"Aucun choix disponible pour la question : {question['question_text']}")
 
-    # "Submit" button to check answers
-    if st.button("Submit"):
+    # Bouton « Soumettre » pour vérifier les réponses
+    if st.button("Soumettre"):
         correct_count = 0
         for question in questions:
             correct_answer = question.get("answer_text")
@@ -80,7 +80,7 @@ def main():
             else:
                 st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer: {correct_answer}", icon="❌")
 
-        st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
+        st.markdown(f"**Tu as eu {correct_count} sur {len(questions)} questions correctes!**")
 
 if __name__ == "__main__":
     main()
