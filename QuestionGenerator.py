@@ -22,7 +22,7 @@ def initialize_firebase():
     else:
         print("Firebase is already initialized.")
 
-# Fetch all questions for debugging
+# Fetch all questions
 def fetch_all_questions():
     try:
         db = firestore.client()
@@ -32,7 +32,7 @@ def fetch_all_questions():
         questions = []
         for doc in query_snapshot:
             question_data = doc.to_dict()
-            st.write(f"Retrieved question: {question_data}")  # Debugging line
+            # Removed the debugging line that prints the question details
             questions.append(question_data)
 
         if not questions:
@@ -49,7 +49,7 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    # Fetch all questions for debugging
+    # Fetch all questions
     questions = fetch_all_questions()
 
     # Filter questions by category
