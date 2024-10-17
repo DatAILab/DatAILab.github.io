@@ -64,7 +64,7 @@ def main():
 
     # Store user answers in session state
     if 'user_answers' not in st.session_state:
-        st.session_state.user_answers = {q["question_text"]: None for q in questions}
+        st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
     # Display questions with appropriate input types
     for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
@@ -76,9 +76,12 @@ def main():
 
         if len(correct_answers) == 1:  # Single correct answer
             selected_answer = st.radio("Choose your answer:", choices, key=question["question_text"])  
-            st.session_state.user_answers[question["question_text"]] = selected_answer
+            st.session_state.user_answers[question["question_text"]] = [selected_answer]
         elif len(correct_answers) > 1:  # Multiple correct answers
-            selected_answers = st.multiselect("Choose your answers:", choices, key=question["question_text"])  
+            selected_answers = []
+            for choice in choices:
+                if st.checkbox(choice, key=f"{question['question_text']}_{choice}"):
+                    selected_answers.append(choice)
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Submit button to check answers
@@ -107,8 +110,8 @@ def main():
                     st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
         st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
-        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 5.**")
-        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 8.**")
+        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct.**")
+        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct.**")
 
 if __name__ == "__main__":
     main()
