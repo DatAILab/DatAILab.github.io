@@ -110,8 +110,8 @@ def main():
                     st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
         st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
-        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct.**")
-        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct.**")
+        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
+        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 5.**")
 
 if __name__ == "__main__":
     main()
