@@ -1,12 +1,10 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
-import random
 
-# Initialisation de Firebase (en dehors des composants Streamlit)
+# Initialize Firebase
 def initialize_firebase():
     if not firebase_admin._apps:  # Check if any Firebase app is already initialized
-        print("Initializing Firebase...")
         cred = credentials.Certificate({
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
@@ -22,8 +20,9 @@ def initialize_firebase():
         })
         firebase_admin.initialize_app(cred)
     else:
-        print("Firebase est déjà initialisé.")
+        print("Firebase is already initialized.")
 
+# Fetch questions by category
 def fetch_questions_by_category(category, limit):
     try:
         db = firestore.client()
@@ -34,41 +33,44 @@ def fetch_questions_by_category(category, limit):
         for doc in query_snapshot:
             questions.append(doc.to_dict())
 
+        if not questions:
+            st.warning(f"No questions found for category: {category}")
+
         return questions
     except Exception as e:
-        st.error(f"Erreur lors de la récupération des questions : {e}")
+        st.error(f"Error fetching questions: {e}")
         return []
 
 def main():
-    # Initialiser Firebase
+    # Initialize Firebase
     initialize_firebase()
 
     st.title("Quiz Certification PL-300")
 
-    # Récupérer les questions
+    # Fetch questions
     prepare_data_questions = fetch_questions_by_category("Prepare the data", 3)
     model_data_questions = fetch_questions_by_category("Model the data", 5)
     questions = prepare_data_questions + model_data_questions
 
-    # Stocker les réponses de l'utilisateur dans l'état de session
+    # Store user answers in session state
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: None for q in questions}
 
-    # Afficher toutes les questions avec des boutons radio
+    # Display questions with radio buttons
     for question in questions:
         st.write("**Question:**", question["question_text"])
         
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
 
-        if choices:  # Afficher uniquement s'il y a des choix
-            selected_answer = st.radio("Choisissez votre réponse:", choices, key=question["question_text"])  
-            # Stocker la réponse sélectionnée par l'utilisateur
+        if choices:  # Display only if there are choices
+            selected_answer = st.radio("Choose your answer:", choices, key=question["question_text"])  
+            # Store the selected answer
             st.session_state.user_answers[question["question_text"]] = selected_answer
         else:
-            st.warning(f"Aucun choix disponible pour la question : {question['question_text']}")
+            st.warning(f"No choices available for the question: {question['question_text']}")
 
-    # Bouton « Soumettre » pour vérifier les réponses
+    # Submit button to check answers
     if st.button("Soumettre"):
         correct_count = 0
         category_correct_count = {"Prepare the data": 0, "Model the data": 0}
@@ -83,9 +85,9 @@ def main():
             else:
                 st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
-        st.markdown(f"**Tu as eu {correct_count} sur {len(questions)} questions correctes!**")
-        st.markdown(f"**Dans la catégorie 'Prepare the data', tu as eu {category_correct_count['Prepare the data']} questions correctes.**")
-        st.markdown(f"**Dans la catégorie 'Model the data', tu as eu {category_correct_count['Model the data']} questions correctes.**")
+        st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
+        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct.**")
+        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct.**")
 
 if __name__ == "__main__":
     main()
