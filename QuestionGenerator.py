@@ -32,7 +32,6 @@ def fetch_all_questions():
         questions = []
         for doc in query_snapshot:
             question_data = doc.to_dict()
-            # Removed the debugging line that prints the question details
             questions.append(question_data)
 
         if not questions:
@@ -68,8 +67,8 @@ def main():
         st.session_state.user_answers = {q["question_text"]: None for q in questions}
 
     # Display questions with appropriate input types
-    for question in questions:
-        st.write("**Question:**", question["question_text"])
+    for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
+        st.write(f"**Question {index}:** {question['question_text']}")
         
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
