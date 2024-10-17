@@ -53,8 +53,8 @@ def main():
     questions = fetch_all_questions()
 
     # Filter questions by category
-    prepare_data_questions = [q for q in questions if q.get("category") == "Prepare the data"]
-    model_data_questions = [q for q in questions if q.get("category") == "Model the data"]
+    prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
+    model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
 
     # Limit the number of questions
     prepare_data_questions = prepare_data_questions[:3]
@@ -67,19 +67,20 @@ def main():
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: None for q in questions}
 
-    # Display questions with radio buttons
+    # Display questions with appropriate input types
     for question in questions:
         st.write("**Question:**", question["question_text"])
         
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
+        correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
 
-        if choices:  # Display only if there are choices
+        if len(correct_answers) == 1:  # Single correct answer
             selected_answer = st.radio("Choose your answer:", choices, key=question["question_text"])  
-            # Store the selected answer
             st.session_state.user_answers[question["question_text"]] = selected_answer
-        else:
-            st.warning(f"No choices available for the question: {question['question_text']}")
+        elif len(correct_answers) > 1:  # Multiple correct answers
+            selected_answers = st.multiselect("Choose your answers:", choices, key=question["question_text"])  
+            st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Submit button to check answers
     if st.button("Soumettre"):
@@ -89,12 +90,22 @@ def main():
         for question in questions:
             correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
             user_answer = st.session_state.user_answers[question["question_text"]]
-            if user_answer in correct_answers:
-                correct_count += 1
-                category_correct_count[question["category"]] += 1
-                st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
-            else:
-                st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+
+            # Check if the user's answer is correct
+            if isinstance(user_answer, list):  # If multiple answers were selected
+                if set(user_answer) == set(correct_answers):
+                    correct_count += 1
+                    category_correct_count[question["Category"]] += 1
+                    st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
+                else:
+                    st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+            else:  # Single answer
+                if user_answer in correct_answers:
+                    correct_count += 1
+                    category_correct_count[question["Category"]] += 1
+                    st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
+                else:
+                    st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
         st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
         st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct.**")
