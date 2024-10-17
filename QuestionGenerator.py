@@ -49,7 +49,8 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-
+    # Fetch all questions
+    questions = fetch_all_questions()
 
     # Filter questions by category
     prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
