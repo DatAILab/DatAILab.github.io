@@ -22,19 +22,21 @@ def initialize_firebase():
     else:
         print("Firebase is already initialized.")
 
-# Fetch questions by category
-def fetch_questions_by_category(category, limit):
+# Fetch all questions for debugging
+def fetch_all_questions():
     try:
         db = firestore.client()
-        questions_ref = db.collection("questions").where("category", "==", category)
-        query_snapshot = questions_ref.limit(limit).get()
+        questions_ref = db.collection("questions")
+        query_snapshot = questions_ref.get()
 
         questions = []
         for doc in query_snapshot:
-            questions.append(doc.to_dict())
+            question_data = doc.to_dict()
+            st.write(f"Retrieved question: {question_data}")  # Debugging line
+            questions.append(question_data)
 
         if not questions:
-            st.warning(f"No questions found for category: {category}")
+            st.warning("No questions found in the database.")
 
         return questions
     except Exception as e:
@@ -47,9 +49,18 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    # Fetch questions
-    prepare_data_questions = fetch_questions_by_category("Prepare the data", 3)
-    model_data_questions = fetch_questions_by_category("Model the data", 5)
+    # Fetch all questions for debugging
+    questions = fetch_all_questions()
+
+    # Filter questions by category
+    prepare_data_questions = [q for q in questions if q.get("category") == "Prepare the data"]
+    model_data_questions = [q for q in questions if q.get("category") == "Model the data"]
+
+    # Limit the number of questions
+    prepare_data_questions = prepare_data_questions[:3]
+    model_data_questions = model_data_questions[:5]
+
+    # Combine questions
     questions = prepare_data_questions + model_data_questions
 
     # Store user answers in session state
