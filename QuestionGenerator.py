@@ -80,6 +80,7 @@ def main():
         elif len(correct_answers) > 1:  # Multiple correct answers
             selected_answers = []
             for choice in choices:
+                # Use checkboxes for multiple answers
                 if st.checkbox(choice, key=f"{question['question_text']}_{choice}"):
                     selected_answers.append(choice)
             st.session_state.user_answers[question["question_text"]] = selected_answers
