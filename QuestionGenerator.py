@@ -74,6 +74,10 @@ def main():
     for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
         st.write(f"**Question {index}:** {question['question_text']}")
         
+        # Check if there is an image URL and display it
+        if 'image' in question and question['image']:
+            st.image(question['image'], caption='Question Image', use_column_width=True)
+
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
         correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
