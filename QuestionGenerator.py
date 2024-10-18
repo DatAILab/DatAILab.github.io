@@ -54,13 +54,17 @@ def main():
     # Filter questions by category
     prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
     model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
+    pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
+    visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
     # Limit the number of questions
     prepare_data_questions = prepare_data_questions[:3]
-    model_data_questions = model_data_questions[:5]
+    model_data_questions = model_data_questions[:4]
+    pbi_service_questions = pbi_service_questions[:4]
+    visualization_questions = visualization_questions[:4]
 
     # Combine questions
-    questions = prepare_data_questions + model_data_questions
+    questions = prepare_data_questions + model_data_questions + pbi_service_questions + visualization_questions
 
     # Store user answers in session state
     if 'user_answers' not in st.session_state:
@@ -75,14 +79,12 @@ def main():
         correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
 
         if len(correct_answers) == 1:  # Single correct answer
-            # Clear previous selection by not using session state for radio buttons
             selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{question['question_text']}")  
             if selected_answer:
                 st.session_state.user_answers[question["question_text"]] = [selected_answer]
         elif len(correct_answers) > 1:  # Multiple correct answers
             selected_answers = []
             for choice in choices:
-                # Use checkboxes for multiple answers
                 if st.checkbox(choice, key=f"checkbox_{question['question_text']}_{choice}"):
                     selected_answers.append(choice)
             st.session_state.user_answers[question["question_text"]] = selected_answers
@@ -90,7 +92,12 @@ def main():
     # Submit button to check answers
     if st.button("Soumettre"):
         correct_count = 0
-        category_correct_count = {"Prepare the data": 0, "Model the data": 0}
+        category_correct_count = {
+            "Prepare the data": 0,
+            "Model the data": 0,
+            "PBI Service": 0,
+            "Visualization": 0
+        }
 
         for question in questions:
             correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
@@ -114,7 +121,9 @@ def main():
 
         st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
         st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
-        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 5.**")
+        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
+        st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
+        st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
 
 if __name__ == "__main__":
     main()
