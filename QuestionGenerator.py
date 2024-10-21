@@ -102,6 +102,20 @@ if st.button("Soumettre"):
         }
     ))
 
+    # Add a target value label
+    gauge_fig.add_annotation(
+        x=0.5,
+        y=0.5,
+        text="Target: 70",
+        showarrow=False,
+        font=dict(size=16, color="blue"),
+        bgcolor="white",
+        bordercolor="blue",
+        borderwidth=2,
+        borderpad=4,
+        opacity=0.8
+    )
+
     st.plotly_chart(gauge_fig)
 
     st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
