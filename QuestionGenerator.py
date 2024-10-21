@@ -140,9 +140,9 @@ def main():
                 'axis': {'range': [0, 100]},
                 'bar': {'color': "white"},
                 'steps': [
-                    {'range': [0, 50], 'color': "red"},
-                    {'range': [50, 75], 'color': "yellow"},
-                    {'range': [75, 100], 'color': "lightgreen"},
+                    {'range': [0, 69], 'color': "red"},
+                    
+                    {'range': [70, 100], 'color': "lightgreen"},
                 ],
             }
         ))
