@@ -82,11 +82,7 @@ if st.button("Soumettre"):
     total_questions = len(questions)
     correct_percentage = (correct_count / total_questions) * 100
 
-    # Add a message based on the correct percentage using st.markdown
-    if correct_percentage >= 70:
-        st.markdown("🎉 **Congratulations! You have successfully passed the exam!** 🎉")
-    else:
-        st.markdown("❌ **Unfortunately, you did not pass the exam. Better luck next time!** ❌")
+    
 
     # Create a gauge chart
     gauge_fig = go.Figure(go.Indicator(
@@ -106,6 +102,11 @@ if st.button("Soumettre"):
     st.plotly_chart(gauge_fig)
 
     st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
+    # Add a message based on the correct percentage using st.markdown
+    if correct_percentage >= 70:
+        st.markdown("🎉 **Congratulations! You have successfully passed the exam!** 🎉")
+    else:
+        st.markdown("❌ **Unfortunately, you did not pass the exam. Better luck next time!** ❌")
 
     # Display category results
     for category, count in category_correct_count.items():
