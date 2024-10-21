@@ -2,23 +2,52 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import firebase_admin
+from firebase_admin import credentials
+
+# Initialize Firebase
+def initialize_firebase():
+    if not firebase_admin._apps:  # Check if any Firebase app is already initialized
+        cred = credentials.Certificate({
+            "type": st.secrets["type"],
+            "project_id": st.secrets["project_id"],
+            "private_key_id": st.secrets["private_key_id"],
+            "private_key": st.secrets["private_key"],
+            "client_email": st.secrets["client_email"],
+            "client_id": st.secrets["client_id"],
+            "auth_uri": st.secrets["auth_uri"],
+            "token_uri": st.secrets["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["client_x509_cert_url"],
+            "universe_domain": st.secrets["universe_domain"]
+        })
+        firebase_admin.initialize_app(cred)
+    else:
+        print("Firebase is already initialized.")
+
+# Call the function to initialize Firebase
+initialize_firebase()
 
 # Sample questions for demonstration
 questions = [
-    {"question_text": "Question 1?", "answer_text": "Answer A", "Category": "Prepare the data"},
-    {"question_text": "Question 2?", "answer_text": "Answer B,Answer C", "Category": "Model the data"},
-    {"question_text": "Question 3?", "answer_text": "Answer D", "Category": "PBI Service"},
-    {"question_text": "Question 4?", "answer_text": "Answer E", "Category": "Visualization"},
+    {"question_text": "Question 1? (Choose A)", "answer_text": "Answer A", "Category": "Prepare the data"},
+    {"question_text": "Question 2? (Choose B or C)", "answer_text": "Answer B,Answer C", "Category": "Model the data"},
+    {"question_text": "Question 3? (Choose D)", "answer_text": "Answer D", "Category": "PBI Service"},
+    {"question_text": "Question 4? (Choose E)", "answer_text": "Answer E", "Category": "Visualization"},
 ]
 
 # Initialize user answers if not already in session state
 if "user_answers" not in st.session_state:
     st.session_state.user_answers = {question["question_text"]: "" for question in questions}
 
-# Display questions and capture user answers
+# Display questions and gather user answers
 for question in questions:
-    user_answer = st.text_input(question["question_text"], key=question["question_text"])
-    st.session_state.user_answers[question["question_text"]] = user_answer
+    if question["answer_text"].count(",") > 0:  # If there are multiple answers
+        user_answer = st.multiselect(question["question_text"], options=question["answer_text"].split(","))
+        st.session_state.user_answers[question["question_text"]] = user_answer
+    else:
+        user_answer = st.radio(question["question_text"], options=question["answer_text"].split(","))
+        st.session_state.user_answers[question["question_text"]] = user_answer
 
 # Submit button to check answers
 if st.button("Soumettre"):
@@ -35,12 +64,20 @@ if st.button("Soumettre"):
         user_answer = st.session_state.user_answers[question["question_text"]]
 
         # Check if the user's answer is correct
-        if user_answer in correct_answers:
-            correct_count += 1
-            category_correct_count[question["Category"]] += 1
-            st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
-        else:
-            st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+        if isinstance(user_answer, list):  # If multiple answers were selected
+            if set(user_answer) == set(correct_answers):
+                correct_count += 1
+                category_correct_count[question["Category"]] += 1
+                st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
+            else:
+                st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+        else:  # Single answer
+            if user_answer in correct_answers:
+                correct_count += 1
+                category_correct_count[question["Category"]] += 1
+                st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
+            else:
+                st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
     total_questions = len(questions)
     correct_percentage = (correct_count / total_questions) * 100
