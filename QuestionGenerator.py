@@ -2,6 +2,7 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Initialize Firebase
 def initialize_firebase():
@@ -142,6 +143,7 @@ def main():
         ax.set_xlabel('Category')
         ax.set_ylabel('Correct Answers')
         ax.set_title('Correct Answers per Category')
+        ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
 
         st.pyplot(fig)
 
