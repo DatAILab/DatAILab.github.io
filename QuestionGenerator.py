@@ -1,55 +1,17 @@
-import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
-import matplotlib.pyplot as plt
-import numpy as np
-import plotly.graph_objects as go
-
-# Initialize Firebase
-def initialize_firebase():
-    if not firebase_admin._apps:  # Check if any Firebase app is already initialized
-        cred = credentials.Certificate({
-            "type": st.secrets["type"],
-            "project_id": st.secrets["project_id"],
-            "private_key_id": st.secrets["private_key_id"],
-            "private_key": st.secrets["private_key"],
-            "client_email": st.secrets["client_email"],
-            "client_id": st.secrets["client_id"],
-            "auth_uri": st.secrets["auth_uri"],
-            "token_uri": st.secrets["token_uri"],
-            "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
-            "client_x509_cert_url": st.secrets["client_x509_cert_url"],
-            "universe_domain": st.secrets["universe_domain"]
-        })
-        firebase_admin.initialize_app(cred)
-    else:
-        print("Firebase is already initialized.")
-
-# Fetch all questions
-def fetch_all_questions():
-    try:
-        db = firestore.client()
-        questions_ref = db.collection("questions")
-        query_snapshot = questions_ref.get()
-
-        questions = []
-        for doc in query_snapshot:
-            question_data = doc.to_dict()
-            questions.append(question_data)
-
-        if not questions:
-            st.warning("No questions found in the database.")
-
-        return questions
-    except Exception as e:
-        st.error(f"Error fetching questions: {e}")
-        return []
-
 def main():
     # Initialize Firebase
     initialize_firebase()
 
     st.title("Quiz Certification PL-300")
+
+    # Hide Streamlit's main menu and footer using custom CSS
+    hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
     # Fetch all questions
     questions = fetch_all_questions()
@@ -141,7 +103,6 @@ def main():
                 'bar': {'color': "white"},
                 'steps': [
                     {'range': [0, 69], 'color': "red"},
-                    
                     {'range': [70, 100], 'color': "lightgreen"},
                 ],
             }
