@@ -117,7 +117,7 @@ def main():
                     category_correct_count[question["Category"]] += 1
                     st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est : {', '.join(user_answer)}", icon="✅")
                 else:
-                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
             else:  # Single answer
                 if user_answer in correct_answers:
                     correct_count += 1
