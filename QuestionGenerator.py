@@ -1,6 +1,7 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
+import matplotlib.pyplot as plt
 
 # Initialize Firebase
 def initialize_firebase():
@@ -123,11 +124,26 @@ def main():
                 else:
                     st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
-        st.markdown(f"**You got {correct_count} out of {len(questions)} questions correct!**")
+        total_questions = len(questions)
+        correct_percentage = (correct_count / total_questions) * 100
+
+        st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
         st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
         st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
         st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
         st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
+
+        # Plot a histogram
+        categories = list(category_correct_count.keys())
+        correct_values = list(category_correct_count.values())
+
+        fig, ax = plt.subplots()
+        ax.bar(categories, correct_values, color='skyblue')
+        ax.set_xlabel('Category')
+        ax.set_ylabel('Correct Answers')
+        ax.set_title('Correct Answers per Category')
+
+        st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
