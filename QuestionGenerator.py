@@ -13,7 +13,12 @@ questions = [
 
 # Initialize user answers if not already in session state
 if "user_answers" not in st.session_state:
-    st.session_state.user_answers = {question["question_text"]: [] for question in questions}
+    st.session_state.user_answers = {question["question_text"]: "" for question in questions}
+
+# Display questions and capture user answers
+for question in questions:
+    user_answer = st.text_input(question["question_text"], key=question["question_text"])
+    st.session_state.user_answers[question["question_text"]] = user_answer
 
 # Submit button to check answers
 if st.button("Soumettre"):
@@ -30,20 +35,12 @@ if st.button("Soumettre"):
         user_answer = st.session_state.user_answers[question["question_text"]]
 
         # Check if the user's answer is correct
-        if isinstance(user_answer, list):  # If multiple answers were selected
-            if set(user_answer) == set(correct_answers):
-                correct_count += 1
-                category_correct_count[question["Category"]] += 1
-                st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
-            else:
-                st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
-        else:  # Single answer
-            if user_answer in correct_answers:
-                correct_count += 1
-                category_correct_count[question["Category"]] += 1
-                st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
-            else:
-                st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+        if user_answer in correct_answers:
+            correct_count += 1
+            category_correct_count[question["Category"]] += 1
+            st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
+        else:
+            st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
     total_questions = len(questions)
     correct_percentage = (correct_count / total_questions) * 100
@@ -74,10 +71,8 @@ if st.button("Soumettre"):
     st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
 
     # Display category results
-    st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
-    st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
-    st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
-    st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
+    for category, count in category_correct_count.items():
+        st.markdown(f"**In the '{category}' category, you got {count} questions correct.**")
 
     # Plot a histogram
     categories = list(category_correct_count.keys())
