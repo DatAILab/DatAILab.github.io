@@ -115,16 +115,16 @@ def main():
                 if set(user_answer) == set(correct_answers):
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
-                    st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
+                    st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est : {', '.join(user_answer)}", icon="✅")
                 else:
-                    st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
             else:  # Single answer
                 if user_answer in correct_answers:
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
-                    st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
+                    st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est: {user_answer}", icon="✅")
                 else:
-                    st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse était: {user_answer}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
 
         total_questions = len(questions)
         correct_percentage = (correct_count / total_questions) * 100
