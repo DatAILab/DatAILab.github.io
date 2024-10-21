@@ -3,3 +3,4 @@ firebase-admin
 retry
 matplotlib
 numpy
+plotly

@@ -3,6 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 
 # Initialize Firebase
 def initialize_firebase():
@@ -129,11 +130,29 @@ def main():
         correct_percentage = (correct_count / total_questions) * 100
 
         st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
+        
+        # Create a gauge chart
+        gauge_fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=correct_percentage,
+            title={'text': "Correct Answers Percentage"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "lightgreen"},
+                'steps': [
+                    {'range': [0, 50], 'color': "red"},
+                    {'range': [50, 75], 'color': "yellow"},
+                    {'range': [75, 100], 'color': "lightgreen"},
+                ],
+            }
+        ))
+
+        st.plotly_chart(gauge_fig)
+
         st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
         st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
-        st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
         st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
-        
+        st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
 
         # Plot a histogram
         categories = list(category_correct_count.keys())
