@@ -1,133 +1,96 @@
-def main():
-    # Initialize Firebase
-    initialize_firebase()
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-    st.title("Quiz Certification PL-300")
+# Sample questions for demonstration
+questions = [
+    {"question_text": "Question 1?", "answer_text": "Answer A", "Category": "Prepare the data"},
+    {"question_text": "Question 2?", "answer_text": "Answer B,Answer C", "Category": "Model the data"},
+    {"question_text": "Question 3?", "answer_text": "Answer D", "Category": "PBI Service"},
+    {"question_text": "Question 4?", "answer_text": "Answer E", "Category": "Visualization"},
+]
 
-    # Hide Streamlit's main menu and footer using custom CSS
-    hide_streamlit_style = """
-    <style>
-    #MainMenu {visibility: hidden;}  /* Hides the main menu */
-    footer {visibility: hidden;}      /* Hides the footer */
-    .stApp {padding-bottom: 0;}      /* Removes padding at the bottom */
-    </style>
-    """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# Initialize user answers if not already in session state
+if "user_answers" not in st.session_state:
+    st.session_state.user_answers = {question["question_text"]: [] for question in questions}
 
-    # Fetch all questions
-    questions = fetch_all_questions()
+# Submit button to check answers
+if st.button("Soumettre"):
+    correct_count = 0
+    category_correct_count = {
+        "Prepare the data": 0,
+        "Model the data": 0,
+        "PBI Service": 0,
+        "Visualization": 0
+    }
 
-    # Filter questions by category
-    prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
-    model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
-    pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
-    visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
-
-    # Limit the number of questions
-    prepare_data_questions = prepare_data_questions[:3]
-    model_data_questions = model_data_questions[:4]
-    pbi_service_questions = pbi_service_questions[:4]
-    visualization_questions = visualization_questions[:4]
-
-    # Combine questions
-    questions = prepare_data_questions + model_data_questions + pbi_service_questions + visualization_questions
-
-    # Store user answers in session state
-    if 'user_answers' not in st.session_state:
-        st.session_state.user_answers = {q["question_text"]: [] for q in questions}
-
-    # Display questions with appropriate input types
-    for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
-        st.write(f"**Question {index}:** {question['question_text']}")
-        
-        # Check if there is an image URL and display it
-        if 'image' in question and question['image']:
-            st.image(question['image'], caption='Question Image', use_column_width=True)
-
-        # Prepare choices from the comma-separated string
-        choices = question.get("Choices", "").split(",")  # Split the string into a list
+    for question in questions:
         correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
+        user_answer = st.session_state.user_answers[question["question_text"]]
 
-        if len(correct_answers) == 1:  # Single correct answer
-            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{question['question_text']}")  
-            if selected_answer:
-                st.session_state.user_answers[question["question_text"]] = [selected_answer]
-        elif len(correct_answers) > 1:  # Multiple correct answers
-            selected_answers = []
-            for choice in choices:
-                if st.checkbox(choice, key=f"checkbox_{question['question_text']}_{choice}"):
-                    selected_answers.append(choice)
-            st.session_state.user_answers[question["question_text"]] = selected_answers
+        # Check if the user's answer is correct
+        if isinstance(user_answer, list):  # If multiple answers were selected
+            if set(user_answer) == set(correct_answers):
+                correct_count += 1
+                category_correct_count[question["Category"]] += 1
+                st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
+            else:
+                st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+        else:  # Single answer
+            if user_answer in correct_answers:
+                correct_count += 1
+                category_correct_count[question["Category"]] += 1
+                st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
+            else:
+                st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
 
-    # Submit button to check answers
-    if st.button("Soumettre"):
-        correct_count = 0
-        category_correct_count = {
-            "Prepare the data": 0,
-            "Model the data": 0,
-            "PBI Service": 0,
-            "Visualization": 0
+    total_questions = len(questions)
+    correct_percentage = (correct_count / total_questions) * 100
+
+    # Create a gauge chart
+    gauge_fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=correct_percentage,
+        title={'text': "Correct Answers Percentage"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "white"},
+            'steps': [
+                {'range': [0, 69], 'color': "red"},
+                {'range': [70, 100], 'color': "lightgreen"},
+            ],
         }
+    ))
 
-        for question in questions:
-            correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
-            user_answer = st.session_state.user_answers[question["question_text"]]
+    st.plotly_chart(gauge_fig)
 
-            # Check if the user's answer is correct
-            if isinstance(user_answer, list):  # If multiple answers were selected
-                if set(user_answer) == set(correct_answers):
-                    correct_count += 1
-                    category_correct_count[question["Category"]] += 1
-                    st.success(f"**{question['question_text']}** - Correct! Your answers are: {', '.join(user_answer)}", icon="✅")
-                else:
-                    st.error(f"**{question['question_text']}** - Incorrect! Your answers were: {', '.join(user_answer)}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
-            else:  # Single answer
-                if user_answer in correct_answers:
-                    correct_count += 1
-                    category_correct_count[question["Category"]] += 1
-                    st.success(f"**{question['question_text']}** - Correct! Your answer is: {user_answer}", icon="✅")
-                else:
-                    st.error(f"**{question['question_text']}** - Incorrect! Your answer was: {user_answer}. Correct answer(s): {', '.join(correct_answers)}", icon="❌")
+    # Add a message based on the correct percentage
+    if correct_percentage >= 70:
+        st.success("🎉 Congratulations! You have successfully passed the exam! 🎉")
+    else:
+        st.error("❌ Unfortunately, you did not pass the exam. Better luck next time! ❌")
 
-        total_questions = len(questions)
-        correct_percentage = (correct_count / total_questions) * 100
+    st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
 
-        st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
-        
-        # Create a gauge chart
-        gauge_fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=correct_percentage,
-            title={'text': "Correct Answers Percentage"},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "white"},
-                'steps': [
-                    {'range': [0, 69], 'color': "red"},
-                    {'range': [70, 100], 'color': "lightgreen"},
-                ],
-            }
-        ))
+    # Display category results
+    st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
+    st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
+    st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
+    st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
 
-        st.plotly_chart(gauge_fig)
+    # Plot a histogram
+    categories = list(category_correct_count.keys())
+    correct_values = list(category_correct_count.values())
 
-        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
-        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
-        st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
-        st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
+    fig, ax = plt.subplots()
+    ax.bar(categories, correct_values, color='skyblue')
+    ax.set_xlabel('Category')
+    ax.set_ylabel('Correct Answers')
+    ax.set_title('Correct Answers per Category')
+    ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
 
-        # Plot a histogram
-        categories = list(category_correct_count.keys())
-        correct_values = list(category_correct_count.values())
-
-        fig, ax = plt.subplots()
-        ax.bar(categories, correct_values, color='skyblue')
-        ax.set_xlabel('Category')
-        ax.set_ylabel('Correct Answers')
-        ax.set_title('Correct Answers per Category')
-        ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
-
-        st.pyplot(fig)
+    st.pyplot(fig)
 
 if __name__ == "__main__":
-    main()
+    st.title("Quiz Application")
