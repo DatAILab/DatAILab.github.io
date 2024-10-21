@@ -129,19 +129,19 @@ def main():
         total_questions = len(questions)
         correct_percentage = (correct_count / total_questions) * 100
 
-        st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
+        st.markdown(f"**Vous avez obtenu {correct_count} sur {total_questions} questions correctes ({correct_percentage:.2f}%)!**")
 
         # Congratulatory message based on performance
         if correct_percentage >= 70:
-            st.success("Congratulations! You successfully passed the quiz! 🎉")
+            st.success("Félicitations ! Vous avez réussi le quiz ! 🎉")
         else:
-            st.error("Unfortunately, you did not pass the quiz. Better luck next time!")
+            st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
 
         # Create a gauge chart with a target value of 70
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=correct_percentage,
-            title={'text': "Correct Answers Percentage"},
+            title={'text': "Pourcentage de réponses correctes"},
             gauge={
                 'axis': {'range': [0, 100]},
                 'bar': {'color': "white"},
@@ -161,7 +161,7 @@ def main():
         gauge_fig.add_annotation(
            x=0.5,
            y=0.5,
-           text="Target: 70",
+           text="Objectif: 70",
            showarrow=False,
            font=dict(size=16, color="blue"),
            bgcolor="white",
@@ -173,10 +173,10 @@ def main():
 
         st.plotly_chart(gauge_fig)
 
-        st.markdown(f"**In the 'Prepare the data' category, you got {category_correct_count['Prepare the data']} questions correct out of 3.**")
-        st.markdown(f"**In the 'Model the data' category, you got {category_correct_count['Model the data']} questions correct out of 4.**")
-        st.markdown(f"**In the 'PBI Service' category, you got {category_correct_count['PBI Service']} questions correct out of 4.**")
-        st.markdown(f"**In the 'Visualization' category, you got {category_correct_count['Visualization']} questions correct out of 4.**")
+        st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 3.**")
+        st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 4.**")
+        st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 4.**")
+        st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 4.**")
 
         # Plot a histogram
         categories = list(category_correct_count.keys())
@@ -184,9 +184,9 @@ def main():
 
         fig, ax = plt.subplots()
         ax.bar(categories, correct_values, color='skyblue')
-        ax.set_xlabel('Category')
-        ax.set_ylabel('Correct Answers')
-        ax.set_title('Correct Answers per Category')
+        ax.set_xlabel('Catégorie')
+        ax.set_ylabel('Réponses correctes')
+        ax.set_title('Réponses correctes par catégorie')
         ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
 
         st.pyplot(fig)
