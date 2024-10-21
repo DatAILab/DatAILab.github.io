@@ -138,7 +138,7 @@ def main():
             title={'text': "Correct Answers Percentage"},
             gauge={
                 'axis': {'range': [0, 100]},
-                'bar': {'color': "lightgreen"},
+                'bar': {'color': "white"},
                 'steps': [
                     {'range': [0, 50], 'color': "red"},
                     {'range': [50, 75], 'color': "yellow"},
