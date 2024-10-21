@@ -92,7 +92,7 @@ if st.button("Soumettre"):
             'bar': {'color': "white"},
             'steps': [
                 {'range': [0, 69], 'color': "red"},
-                {'range': [70, 100], 'color': "blue"},
+                {'range': [70, 100], 'color': "lightgreen"},
             ],
             'threshold': {
                 'line': {'color': "blue", 'width': 4},
