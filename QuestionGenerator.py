@@ -82,7 +82,7 @@ if st.button("Soumettre"):
     total_questions = len(questions)
     correct_percentage = (correct_count / total_questions) * 100
 
-    # Create a gauge chart with a value of 70
+    # Create a gauge chart with a target value of 70
     gauge_fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=correct_percentage,
@@ -97,7 +97,7 @@ if st.button("Soumettre"):
             'threshold': {
                 'line': {'color': "blue", 'width': 4},
                 'thickness': 0.75,
-                'value': 70  # This sets the threshold line at 70
+                'value': 70  # This sets the target value at 70
             }
         }
     ))
