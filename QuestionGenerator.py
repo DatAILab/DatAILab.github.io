@@ -131,7 +131,7 @@ def main():
 
         st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
         
-        # Create a gauge chart
+        # Create a gauge chart with a target value of 70
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=correct_percentage,
@@ -144,6 +144,11 @@ def main():
                     {'range': [50, 75], 'color': "yellow"},
                     {'range': [75, 100], 'color': "lightgreen"},
                 ],
+                'threshold': {
+                    'line': {'color': "blue", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 70  # This sets the target value at 70
+                }
             }
         ))
 
