@@ -130,7 +130,13 @@ def main():
         correct_percentage = (correct_count / total_questions) * 100
 
         st.markdown(f"**You got {correct_count} out of {total_questions} questions correct ({correct_percentage:.2f}%)!**")
-        
+
+        # Congratulatory message based on performance
+        if correct_percentage >= 70:
+            st.success("Congratulations! You successfully passed the quiz! 🎉")
+        else:
+            st.error("Unfortunately, you did not pass the quiz. Better luck next time!")
+
         # Create a gauge chart with a target value of 70
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
@@ -138,11 +144,11 @@ def main():
             title={'text': "Correct Answers Percentage"},
             gauge={
                 'axis': {'range': [0, 100]},
-                'bar': {'color': "white"},
+                'bar': {'color': "lightgreen"},
                 'steps': [
-                    {'range': [0, 69], 'color': "red"},
-                    
-                    {'range': [70, 100], 'color': "lightgreen"},
+                    {'range': [0, 50], 'color': "red"},
+                    {'range': [50, 75], 'color': "yellow"},
+                    {'range': [75, 100], 'color': "lightgreen"},
                 ],
                 'threshold': {
                     'line': {'color': "blue", 'width': 4},
@@ -151,19 +157,6 @@ def main():
                 }
             }
         ))
-        # Add a target value label
-        gauge_fig.add_annotation(
-           x=0.5,
-           y=0.5,
-           text="Target: 70",
-           showarrow=False,
-           font=dict(size=16, color="blue"),
-           bgcolor="white",
-           bordercolor="blue",
-           borderwidth=2,
-           borderpad=4,
-           opacity=0.8
-       )
 
         st.plotly_chart(gauge_fig)
 
