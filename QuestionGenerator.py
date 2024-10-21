@@ -7,8 +7,9 @@ def main():
     # Hide Streamlit's main menu and footer using custom CSS
     hide_streamlit_style = """
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}  /* Hides the main menu */
+    footer {visibility: hidden;}      /* Hides the footer */
+    .stApp {padding-bottom: 0;}      /* Removes padding at the bottom */
     </style>
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
