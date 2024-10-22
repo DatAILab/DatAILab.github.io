@@ -4,6 +4,7 @@ from firebase_admin import credentials, firestore
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+import random
 
 # Initialize Firebase
 def initialize_firebase():
@@ -60,14 +61,14 @@ def main():
     pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
     visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
-    # Limit the number of questions
-    prepare_data_questions = prepare_data_questions[:3]
-    model_data_questions = model_data_questions[:4]
-    pbi_service_questions = pbi_service_questions[:4]
-    visualization_questions = visualization_questions[:4]
+    # Randomly sample the required number of questions from each category
+    prepare_data_questions = random.sample(prepare_data_questions, 6)
+    model_data_questions = random.sample(model_data_questions, 14)
+    visualization_questions = random.sample(visualization_questions, 10)
+    pbi_service_questions = random.sample(pbi_service_questions, 10)
 
     # Combine questions
-    questions = prepare_data_questions + model_data_questions + pbi_service_questions + visualization_questions
+    questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
 
     # Store user answers in session state
     if 'user_answers' not in st.session_state:
@@ -147,7 +148,6 @@ def main():
                 'bar': {'color': "white"},
                 'steps': [
                     {'range': [0, 69], 'color': "red"},
-                    
                     {'range': [70, 100], 'color': "lightgreen"},
                 ],
                 'threshold': {
@@ -173,10 +173,10 @@ def main():
 
         st.plotly_chart(gauge_fig)
 
-        st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 3.**")
-        st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 4.**")
-        st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 4.**")
-        st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 4.**")
+        st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
+        st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
+        st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 10.**")
+        st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
 
         # Plot a histogram
         categories = list(category_correct_count.keys())
