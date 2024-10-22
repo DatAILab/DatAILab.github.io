@@ -75,32 +75,35 @@ def main():
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
     # Display questions with appropriate input types
-    for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
-        st.write(f"**Question {index}:** {question['question_text']}")
-        
-        # Check if there is an image URL and display it
-        if 'image' in question and question['image']:
-            st.image(question['image'], caption='Question Image', use_column_width=True)
+    question_container = st.empty()  # Create an empty container for questions
+    with question_container:
+        for index, question in enumerate(questions, start=1):
+            st.write(f"**Question {index}:** {question['question_text']}")
+            
+            # Check if there is an image URL and display it
+            if 'image' in question and question['image']:
+                st.image(question['image'], caption='Question Image', use_column_width=True)
 
-        # Prepare choices from the comma-separated string
-        choices = question.get("Choices", "").split(",")  # Split the string into a list
-        correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
+            # Prepare choices from the comma-separated string
+            choices = question.get("Choices", "").split(",")
+            correct_answers = question.get("answer_text", "").split(",")
 
-        if len(correct_answers) == 1:  # Single correct answer
-            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")  
-            if selected_answer:
-                st.session_state.user_answers[question["question_text"]] = [selected_answer]
-        elif len(correct_answers) > 1:  # Multiple correct answers
-            selected_answers = []
-            for choice in choices:
-                # Create a unique key for each checkbox
-                unique_key = f"checkbox_{index}_{choice.strip()}"
-                if st.checkbox(choice.strip(), key=unique_key):
-                    selected_answers.append(choice.strip())
-            st.session_state.user_answers[question["question_text"]] = selected_answers
+            if len(correct_answers) == 1:  # Single correct answer
+                selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")
+                if selected_answer:
+                    st.session_state.user_answers[question["question_text"]] = [selected_answer]
+            elif len(correct_answers) > 1:  # Multiple correct answers
+                selected_answers = []
+                for choice in choices:
+                    unique_key = f"checkbox_{index}_{choice.strip()}"
+                    if st.checkbox(choice.strip(), key=unique_key):
+                        selected_answers.append(choice.strip())
+                st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Submit button to check answers
     if st.button("Soumettre"):
+        question_container.empty()  # Clear the question container
+        
         correct_count = 0
         category_correct_count = {
             "Prepare the data": 0,
@@ -110,18 +113,18 @@ def main():
         }
 
         for question in questions:
-            correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
+            correct_answers = question.get("answer_text", "").split(",")
             user_answer = st.session_state.user_answers[question["question_text"]]
 
             # Check if the user's answer is correct
-            if isinstance(user_answer, list):  # If multiple answers were selected
+            if isinstance(user_answer, list):
                 if set(user_answer) == set(correct_answers):
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
                     st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est : {', '.join(user_answer)}", icon="✅")
                 else:
                     st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
-            else:  # Single answer
+            else:
                 if user_answer in correct_answers:
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
