@@ -6,7 +6,45 @@ import numpy as np
 import plotly.graph_objects as go
 import random
 
-# [Previous initialize_firebase and fetch_all_questions functions remain the same]
+# Initialize Firebase
+def initialize_firebase():
+    if not firebase_admin._apps:  # Check if any Firebase app is already initialized
+        cred = credentials.Certificate({
+            "type": st.secrets["type"],
+            "project_id": st.secrets["project_id"],
+            "private_key_id": st.secrets["private_key_id"],
+            "private_key": st.secrets["private_key"],
+            "client_email": st.secrets["client_email"],
+            "client_id": st.secrets["client_id"],
+            "auth_uri": st.secrets["auth_uri"],
+            "token_uri": st.secrets["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["client_x509_cert_url"],
+            "universe_domain": st.secrets["universe_domain"]
+        })
+        firebase_admin.initialize_app(cred)
+    else:
+        print("Firebase is already initialized.")
+
+# Fetch all questions
+def fetch_all_questions():
+    try:
+        db = firestore.client()
+        questions_ref = db.collection("questions")
+        query_snapshot = questions_ref.get()
+
+        questions = []
+        for doc in query_snapshot:
+            question_data = doc.to_dict()
+            questions.append(question_data)
+
+        if not questions:
+            st.warning("No questions found in the database.")
+
+        return questions
+    except Exception as e:
+        st.error(f"Error fetching questions: {e}")
+        return []
 
 def main():
     # Initialize Firebase
@@ -110,7 +148,67 @@ def main():
 
             st.markdown(f"**Vous avez obtenu {correct_count} sur {total_questions} questions correctes ({correct_percentage:.2f}%)!**")
 
-            # [Rest of the results visualization code remains the same]
+            # Congratulatory message based on performance
+            if correct_percentage >= 70:
+                st.success("Félicitations ! Vous avez réussi le quiz ! 🎉")
+            else:
+                st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
+
+            # Create a gauge chart with a target value of 70
+            gauge_fig = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=correct_percentage,
+                title={'text': "Pourcentage de réponses correctes"},
+                gauge={
+                    'axis': {'range': [0, 100]},
+                    'bar': {'color': "white"},
+                    'steps': [
+                        {'range': [0, 69], 'color': "red"},
+                        {'range': [70, 100], 'color': "lightgreen"},
+                    ],
+                    'threshold': {
+                        'line': {'color': "blue", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 70
+                    }
+                }
+            ))
+            # Add a target value label
+            gauge_fig.add_annotation(
+                x=0.5,
+                y=0.5,
+                text="Objectif: 70",
+                showarrow=False,
+                font=dict(size=16, color="blue"),
+                bgcolor="white",
+                bordercolor="blue",
+                borderwidth=2,
+                borderpad=4,
+                opacity=0.8
+            )
+
+            st.plotly_chart(gauge_fig)
+
+            st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
+            st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
+            st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
+            st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
+
+            # Plot a histogram
+            categories = list(category_correct_count.keys())
+            correct_values = list(category_correct_count.values())
+
+            fig, ax = plt.subplots()
+            ax.bar(categories, correct_values, color='skyblue')
+            ax.set_xlabel('Catégorie')
+            ax.set_ylabel('Réponses correctes')
+            ax.set_title('Réponses correctes par catégorie')
+            ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
+
+            plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
+            plt.tight_layout()  # Adjust layout to prevent label cutoff
+            
+            st.pyplot(fig)
 
             # Add a button to restart the quiz
             if st.button("Recommencer le quiz"):
