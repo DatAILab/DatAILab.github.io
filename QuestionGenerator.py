@@ -62,10 +62,10 @@ def main():
     visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
     # Randomly sample the required number of questions from each category
-    prepare_data_questions = random.sample(prepare_data_questions, 12)
-    model_data_questions = random.sample(model_data_questions, 10)
-    visualization_questions = random.sample(visualization_questions, 12)
-    pbi_service_questions = random.sample(pbi_service_questions, 6)
+    prepare_data_questions = random.sample(prepare_data_questions, 6)
+    model_data_questions = random.sample(model_data_questions, 14)
+    visualization_questions = random.sample(visualization_questions, 10)
+    pbi_service_questions = random.sample(pbi_service_questions, 10)
 
     # Combine questions
     questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
