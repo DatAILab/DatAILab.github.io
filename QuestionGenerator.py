@@ -52,10 +52,6 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    # Add showing_results to session state if not present
-    if 'showing_results' not in st.session_state:
-        st.session_state.showing_results = False
-
     # Fetch all questions
     questions = fetch_all_questions()
 
@@ -78,143 +74,124 @@ def main():
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
-    # Create two containers: one for questions and one for results
-    questions_container = st.container()
-    results_container = st.container()
+    # Display questions with appropriate input types
+    for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
+        st.write(f"**Question {index}:** {question['question_text']}")
+        
+        # Check if there is an image URL and display it
+        if 'image' in question and question['image']:
+            st.image(question['image'], caption='Question Image', use_column_width=True)
 
-    # Show questions only if not showing results
-    if not st.session_state.showing_results:
-        with questions_container:
-            for index, question in enumerate(questions, start=1):
-                st.write(f"**Question {index}:** {question['question_text']}")
-                
-                # Check if there is an image URL and display it
-                if 'image' in question and question['image']:
-                    st.image(question['image'], caption='Question Image', use_column_width=True)
+        # Prepare choices from the comma-separated string
+        choices = question.get("Choices", "").split(",")  # Split the string into a list
+        correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
 
-                # Prepare choices from the comma-separated string
-                choices = question.get("Choices", "").split(",")
-                correct_answers = question.get("answer_text", "").split(",")
+        if len(correct_answers) == 1:  # Single correct answer
+            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")  
+            if selected_answer:
+                st.session_state.user_answers[question["question_text"]] = [selected_answer]
+        elif len(correct_answers) > 1:  # Multiple correct answers
+            selected_answers = []
+            for choice in choices:
+                # Create a unique key for each checkbox
+                unique_key = f"checkbox_{index}_{choice.strip()}"
+                if st.checkbox(choice.strip(), key=unique_key):
+                    selected_answers.append(choice.strip())
+            st.session_state.user_answers[question["question_text"]] = selected_answers
 
-                if len(correct_answers) == 1:  # Single correct answer
-                    selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")
-                    if selected_answer:
-                        st.session_state.user_answers[question["question_text"]] = [selected_answer]
-                elif len(correct_answers) > 1:  # Multiple correct answers
-                    selected_answers = []
-                    for choice in choices:
-                        unique_key = f"checkbox_{index}_{choice.strip()}"
-                        if st.checkbox(choice.strip(), key=unique_key):
-                            selected_answers.append(choice.strip())
-                    st.session_state.user_answers[question["question_text"]] = selected_answers
+    # Submit button to check answers
+    if st.button("Soumettre"):
+        correct_count = 0
+        category_correct_count = {
+            "Prepare the data": 0,
+            "Model the data": 0,
+            "PBI Service": 0,
+            "Visualization": 0
+        }
 
-            if st.button("Soumettre"):
-                st.session_state.showing_results = True
-                st.rerun()
+        for question in questions:
+            correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
+            user_answer = st.session_state.user_answers[question["question_text"]]
 
-    # Show results if showing_results is True
-    if st.session_state.showing_results:
-        with results_container:
-            correct_count = 0
-            category_correct_count = {
-                "Prepare the data": 0,
-                "Model the data": 0,
-                "PBI Service": 0,
-                "Visualization": 0
-            }
-
-            for question in questions:
-                correct_answers = question.get("answer_text", "").split(",")
-                user_answer = st.session_state.user_answers[question["question_text"]]
-
-                # Check if the user's answer is correct
-                if isinstance(user_answer, list):
-                    if set(user_answer) == set(correct_answers):
-                        correct_count += 1
-                        category_correct_count[question["Category"]] += 1
-                        st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est : {', '.join(user_answer)}", icon="✅")
-                    else:
-                        st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
+            # Check if the user's answer is correct
+            if isinstance(user_answer, list):  # If multiple answers were selected
+                if set(user_answer) == set(correct_answers):
+                    correct_count += 1
+                    category_correct_count[question["Category"]] += 1
+                    st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est : {', '.join(user_answer)}", icon="✅")
                 else:
-                    if user_answer in correct_answers:
-                        correct_count += 1
-                        category_correct_count[question["Category"]] += 1
-                        st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est: {user_answer}", icon="✅")
-                    else:
-                        st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse était: {user_answer}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
+                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse est: {', '.join(user_answer)}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
+            else:  # Single answer
+                if user_answer in correct_answers:
+                    correct_count += 1
+                    category_correct_count[question["Category"]] += 1
+                    st.success(f"**{question['question_text']}** - C'est exact ! Votre réponse est: {user_answer}", icon="✅")
+                else:
+                    st.error(f"**{question['question_text']}** - C'est faux ! Votre réponse était: {user_answer}. Réponse(s) correcte(s): {', '.join(correct_answers)}", icon="❌")
 
-            total_questions = len(questions)
-            correct_percentage = (correct_count / total_questions) * 100
+        total_questions = len(questions)
+        correct_percentage = (correct_count / total_questions) * 100
 
-            st.markdown(f"**Vous avez obtenu {correct_count} sur {total_questions} questions correctes ({correct_percentage:.2f}%)!**")
+        st.markdown(f"**Vous avez obtenu {correct_count} sur {total_questions} questions correctes ({correct_percentage:.2f}%)!**")
 
-            # Congratulatory message based on performance
-            if correct_percentage >= 70:
-                st.success("Félicitations ! Vous avez réussi le quiz ! 🎉")
-            else:
-                st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
+        # Congratulatory message based on performance
+        if correct_percentage >= 70:
+            st.success("Félicitations ! Vous avez réussi le quiz ! 🎉")
+        else:
+            st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
 
-            # Create a gauge chart with a target value of 70
-            gauge_fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=correct_percentage,
-                title={'text': "Pourcentage de réponses correctes"},
-                gauge={
-                    'axis': {'range': [0, 100]},
-                    'bar': {'color': "white"},
-                    'steps': [
-                        {'range': [0, 69], 'color': "red"},
-                        {'range': [70, 100], 'color': "lightgreen"},
-                    ],
-                    'threshold': {
-                        'line': {'color': "blue", 'width': 4},
-                        'thickness': 0.75,
-                        'value': 70
-                    }
+        # Create a gauge chart with a target value of 70
+        gauge_fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=correct_percentage,
+            title={'text': "Pourcentage de réponses correctes"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "white"},
+                'steps': [
+                    {'range': [0, 69], 'color': "red"},
+                    {'range': [70, 100], 'color': "lightgreen"},
+                ],
+                'threshold': {
+                    'line': {'color': "blue", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 70  # This sets the target value at 70
                 }
-            ))
-            # Add a target value label
-            gauge_fig.add_annotation(
-                x=0.5,
-                y=0.5,
-                text="Objectif: 70",
-                showarrow=False,
-                font=dict(size=16, color="blue"),
-                bgcolor="white",
-                bordercolor="blue",
-                borderwidth=2,
-                borderpad=4,
-                opacity=0.8
-            )
+            }
+        ))
+        # Add a target value label
+        gauge_fig.add_annotation(
+           x=0.5,
+           y=0.5,
+           text="Objectif: 70",
+           showarrow=False,
+           font=dict(size=16, color="blue"),
+           bgcolor="white",
+           bordercolor="blue",
+           borderwidth=2,
+           borderpad=4,
+           opacity=0.8
+       )
 
-            st.plotly_chart(gauge_fig)
+        st.plotly_chart(gauge_fig)
 
-            st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
-            st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
-            st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
-            st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
+        st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
+        st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
+        st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
+        st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
 
-            # Plot a histogram
-            categories = list(category_correct_count.keys())
-            correct_values = list(category_correct_count.values())
+        # Plot a histogram
+        categories = list(category_correct_count.keys())
+        correct_values = list(category_correct_count.values())
 
-            fig, ax = plt.subplots()
-            ax.bar(categories, correct_values, color='skyblue')
-            ax.set_xlabel('Catégorie')
-            ax.set_ylabel('Réponses correctes')
-            ax.set_title('Réponses correctes par catégorie')
-            ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))
-            
-            plt.xticks(rotation=45, ha='right')
-            plt.tight_layout()
-            
-            st.pyplot(fig)
+        fig, ax = plt.subplots()
+        ax.bar(categories, correct_values, color='skyblue')
+        ax.set_xlabel('Catégorie')
+        ax.set_ylabel('Réponses correctes')
+        ax.set_title('Réponses correctes par catégorie')
+        ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
 
-            # Add a button to restart the quiz
-            if st.button("Recommencer le quiz"):
-                st.session_state.showing_results = False
-                st.session_state.user_answers = {q["question_text"]: [] for q in questions}
-                st.rerun()
+        st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
