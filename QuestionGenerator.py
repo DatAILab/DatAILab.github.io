@@ -87,14 +87,16 @@ def main():
         correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
 
         if len(correct_answers) == 1:  # Single correct answer
-            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{question['question_text']}")  
+            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")  
             if selected_answer:
                 st.session_state.user_answers[question["question_text"]] = [selected_answer]
         elif len(correct_answers) > 1:  # Multiple correct answers
             selected_answers = []
             for choice in choices:
-                if st.checkbox(choice, key=f"checkbox_{question['question_text']}_{choice}"):
-                    selected_answers.append(choice)
+                # Create a unique key for each checkbox
+                unique_key = f"checkbox_{index}_{choice.strip()}"
+                if st.checkbox(choice.strip(), key=unique_key):
+                    selected_answers.append(choice.strip())
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Submit button to check answers
