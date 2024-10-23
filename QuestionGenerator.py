@@ -55,20 +55,24 @@ def main():
     # Fetch all questions
     questions = fetch_all_questions()
 
-    # Filter questions by category
-    prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
-    model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
-    pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
-    visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
+    # Check if questions are already sampled and stored in session state
+    if 'sampled_questions' not in st.session_state:
+        # Filter questions by category
+        prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
+        model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
+        pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
+        visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
-    # Randomly sample the required number of questions from each category
-    prepare_data_questions = random.sample(prepare_data_questions, 12)
-    model_data_questions = random.sample(model_data_questions, 10)
-    visualization_questions = random.sample(visualization_questions, 12)
-    pbi_service_questions = random.sample(pbi_service_questions, 6)
+        # Randomly sample the required number of questions from each category
+        prepare_data_questions = random.sample(prepare_data_questions, 12)
+        model_data_questions = random.sample(model_data_questions, 10)
+        visualization_questions = random.sample(visualization_questions, 12)
+        pbi_service_questions = random.sample(pbi_service_questions, 6)
 
-    # Combine questions
-    questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
+        # Combine questions
+        st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
+
+    questions = st.session_state.sampled_questions
 
     # Store user answers in session state
     if 'user_answers' not in st.session_state:
