@@ -82,12 +82,25 @@ def main():
     for index, question in enumerate(questions, start=1):
         st.write(f"**Question {index}:** {question['question_text']}")
         
-        # Check if 'image_url' exists in the question document and is not empty
+        # Check if 'image_url' exists and handle multiple images
         if 'image_url' in question and question['image_url']:
-            try:
-                st.image(question['image_url'], caption='Question Image', use_column_width=True)
-            except Exception as e:
-                st.error(f"Error loading image: {e}")
+            # Split the image_url string into individual URLs
+            image_urls = [url.strip() for url in question['image_url'].split(',')]
+            
+            # Create columns for multiple images if needed
+            if len(image_urls) > 1:
+                cols = st.columns(len(image_urls))
+                for idx, url in enumerate(image_urls):
+                    if url:  # Check if URL is not empty
+                        try:
+                            cols[idx].image(url, caption=f'Image {idx + 1}', use_column_width=True)
+                        except Exception as e:
+                            cols[idx].error(f"Error loading image {idx + 1}: {e}")
+            else:  # Single image
+                try:
+                    st.image(image_urls[0], caption='Question Image', use_column_width=True)
+                except Exception as e:
+                    st.error(f"Error loading image: {e}")
 
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
