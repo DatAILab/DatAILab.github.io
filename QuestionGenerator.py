@@ -79,12 +79,15 @@ def main():
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
     # Display questions with appropriate input types
-    for index, question in enumerate(questions, start=1):  # Enumerate questions starting from 1
+    for index, question in enumerate(questions, start=1):
         st.write(f"**Question {index}:** {question['question_text']}")
         
-        # Check if there is an image URL and display it
-        if 'image' in question and question['image']:
-            st.image(question['image'], caption='Question Image', use_column_width=True)
+        # Check if 'image_url' exists in the question document and is not empty
+        if 'image_url' in question and question['image_url']:
+            try:
+                st.image(question['image_url'], caption='Question Image', use_column_width=True)
+            except Exception as e:
+                st.error(f"Error loading image: {e}")
 
         # Prepare choices from the comma-separated string
         choices = question.get("Choices", "").split(",")  # Split the string into a list
@@ -159,23 +162,23 @@ def main():
                 'threshold': {
                     'line': {'color': "blue", 'width': 4},
                     'thickness': 0.75,
-                    'value': 70  # This sets the target value at 70
+                    'value': 70
                 }
             }
         ))
-        # Add a target value label
+        
         gauge_fig.add_annotation(
-           x=0.5,
-           y=0.5,
-           text="Objectif: 70",
-           showarrow=False,
-           font=dict(size=16, color="blue"),
-           bgcolor="white",
-           bordercolor="blue",
-           borderwidth=2,
-           borderpad=4,
-           opacity=0.8
-       )
+            x=0.5,
+            y=0.5,
+            text="Objectif: 70",
+            showarrow=False,
+            font=dict(size=16, color="blue"),
+            bgcolor="white",
+            bordercolor="blue",
+            borderwidth=2,
+            borderpad=4,
+            opacity=0.8
+        )
 
         st.plotly_chart(gauge_fig)
 
@@ -193,7 +196,7 @@ def main():
         ax.set_xlabel('Catégorie')
         ax.set_ylabel('Réponses correctes')
         ax.set_title('Réponses correctes par catégorie')
-        ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))  # Set Y-axis ticks incrementing by 1
+        ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))
 
         st.pyplot(fig)
 
