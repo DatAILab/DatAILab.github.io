@@ -50,7 +50,31 @@ def main():
     # Initialisation de Firebase
     initialize_firebase()
 
+    # Create an anchor for the top of the page
+    st.markdown('<div id="top"></div>', unsafe_allow_html=True)
+
     st.title("Quiz Certification PL-300")
+
+    # Add a "Back to Top" button in the sidebar
+    with st.sidebar:
+        st.markdown(
+            '''
+            <a href="#top" style="
+                display: inline-block;
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                text-align: center;
+                text-decoration: none;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 4px;">
+                ⬆️ Retour en haut
+            </a>
+            ''',
+            unsafe_allow_html=True
+        )
 
     # Récupération de toutes les questions
     questions = fetch_all_questions()
@@ -227,13 +251,38 @@ def main():
 
         st.pyplot(fig)
 
-        # Bouton pour recommencer le quiz
-        if st.button("Reprendre"):
-            # Réinitialisation des variables de session
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            # Rechargement de la page
-            st.experimental_rerun()
+        # Create two columns for the buttons at the bottom
+        col1, col2 = st.columns(2)
+        
+        # Reprendre button in the first column
+        with col1:
+            if st.button("Reprendre"):
+                # Réinitialisation des variables de session
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                # Rechargement de la page
+                st.experimental_rerun()
+        
+        # Back to top link in the second column
+        with col2:
+            st.markdown(
+                '''
+                <a href="#top" style="
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background-color: #4CAF50;
+                    color: white;
+                    text-align: center;
+                    text-decoration: none;
+                    font-size: 16px;
+                    margin: 4px 2px;
+                    cursor: pointer;
+                    border-radius: 4px;">
+                    ⬆️ Retour en haut
+                </a>
+                ''',
+                unsafe_allow_html=True
+            )
 
 if __name__ == "__main__":
     main()
