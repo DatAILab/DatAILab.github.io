@@ -55,26 +55,7 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    # Add a "Back to Top" button in the sidebar
-    with st.sidebar:
-        st.markdown(
-            '''
-            <a href="#top" style="
-                display: inline-block;
-                padding: 8px 16px;
-                background-color: #4CAF50;
-                color: white;
-                text-align: center;
-                text-decoration: none;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-                border-radius: 4px;">
-                ⬆️ Retour en haut
-            </a>
-            ''',
-            unsafe_allow_html=True
-        )
+    
 
     # Récupération de toutes les questions
     questions = fetch_all_questions()
@@ -270,7 +251,7 @@ def main():
                 <a href="#top" style="
                     display: inline-block;
                     padding: 8px 16px;
-                    background-color: #4CAF50;
+                    background-color: #ffffff
                     color: white;
                     text-align: center;
                     text-decoration: none;
