@@ -278,7 +278,7 @@ def main():
                     margin: 4px 2px;
                     cursor: pointer;
                     border-radius: 4px;">
-                    ⬆️ Retour en haut
+                    ⬆️
                 </a>
                 ''',
                 unsafe_allow_html=True
