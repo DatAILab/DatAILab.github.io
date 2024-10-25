@@ -6,9 +6,9 @@ import numpy as np
 import plotly.graph_objects as go
 import random
 
-# Initialize Firebase
+# Initialisation de Firebase
 def initialize_firebase():
-    if not firebase_admin._apps:  # Check if any Firebase app is already initialized
+    if not firebase_admin._apps:  # Vérifie si une application Firebase est déjà initialisée
         cred = credentials.Certificate({
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
@@ -24,9 +24,9 @@ def initialize_firebase():
         })
         firebase_admin.initialize_app(cred)
     else:
-        print("Firebase is already initialized.")
+        print("Firebase est déjà initialisé.")
 
-# Fetch all questions
+# Récupération de toutes les questions
 def fetch_all_questions():
     try:
         db = firestore.client()
@@ -39,87 +39,86 @@ def fetch_all_questions():
             questions.append(question_data)
 
         if not questions:
-            st.warning("No questions found in the database.")
+            st.warning("Aucune question trouvée dans la base de données.")
 
         return questions
     except Exception as e:
-        st.error(f"Error fetching questions: {e}")
+        st.error(f"Erreur lors de la récupération des questions: {e}")
         return []
 
 def main():
-    # Initialize Firebase
+    # Initialisation de Firebase
     initialize_firebase()
 
     st.title("Quiz Certification PL-300")
 
-    # Fetch all questions
+    # Récupération de toutes les questions
     questions = fetch_all_questions()
 
-    # Check if questions are already sampled and stored in session state
+    # Vérification si les questions sont déjà échantillonnées et stockées dans la session
     if 'sampled_questions' not in st.session_state:
-        # Filter questions by category
+        # Filtrage des questions par catégorie
         prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
         model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
         pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
         visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
-        # Randomly sample the required number of questions from each category
+        # Échantillonnage aléatoire du nombre requis de questions pour chaque catégorie
         prepare_data_questions = random.sample(prepare_data_questions, 12)
         model_data_questions = random.sample(model_data_questions, 10)
         visualization_questions = random.sample(visualization_questions, 12)
         pbi_service_questions = random.sample(pbi_service_questions, 6)
 
-        # Combine questions
+        # Combinaison des questions
         st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
 
     questions = st.session_state.sampled_questions
 
-    # Store user answers in session state
+    # Stockage des réponses de l'utilisateur dans la session
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
-    # Display questions with appropriate input types
+    # Affichage des questions avec les types d'entrée appropriés
     for index, question in enumerate(questions, start=1):
         st.write(f"**Question {index}:** {question['question_text']}")
         
-        # Check if 'image_url' exists and handle multiple images
+        # Vérification de l'existence d'image_url et gestion des images multiples
         if 'image_url' in question and question['image_url']:
-            # Split the image_url string into individual URLs
+            # Division de la chaîne image_url en URLs individuelles
             image_urls = [url.strip() for url in question['image_url'].split(',')]
             
-            # Create columns for multiple images if needed
+            # Création de colonnes pour plusieurs images si nécessaire
             if len(image_urls) > 1:
                 cols = st.columns(len(image_urls))
                 for idx, url in enumerate(image_urls):
-                    if url:  # Check if URL is not empty
+                    if url:  # Vérification si l'URL n'est pas vide
                         try:
                             cols[idx].image(url, caption=f'Image {idx + 1}', use_column_width=True)
                         except Exception as e:
-                            cols[idx].error(f"Error loading image {idx + 1}: {e}")
-            else:  # Single image
+                            cols[idx].error(f"Erreur de chargement de l'image {idx + 1}: {e}")
+            else:  # Image unique
                 try:
-                    st.image(image_urls[0], caption='Question Image', use_column_width=True)
+                    st.image(image_urls[0], caption='Image de la question', use_column_width=True)
                 except Exception as e:
-                    st.error(f"Error loading image: {e}")
+                    st.error(f"Erreur de chargement de l'image: {e}")
 
-        # Prepare choices from the comma-separated string
-        choices = question.get("Choices", "").split(",")  # Split the string into a list
-        correct_answers = question.get("answer_text", "").split(",")  # Split correct answers
+        # Préparation des choix à partir de la chaîne séparée par des virgules
+        choices = question.get("Choices", "").split(",")
+        correct_answers = question.get("answer_text", "").split(",")
 
-        if len(correct_answers) == 1:  # Single correct answer
-            selected_answer = st.radio("Choose your answer:", choices, key=f"radio_{index}")  
+        if len(correct_answers) == 1:  # Réponse unique
+            selected_answer = st.radio("Choisissez votre réponse:", choices, key=f"radio_{index}")  
             if selected_answer:
                 st.session_state.user_answers[question["question_text"]] = [selected_answer]
-        elif len(correct_answers) > 1:  # Multiple correct answers
+        elif len(correct_answers) > 1:  # Réponses multiples
             selected_answers = []
             for choice in choices:
-                # Create a unique key for each checkbox
                 unique_key = f"checkbox_{index}_{choice.strip()}"
                 if st.checkbox(choice.strip(), key=unique_key):
                     selected_answers.append(choice.strip())
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
-    # Submit button to check answers
+    # Bouton de soumission pour vérifier les réponses
     if st.button("Soumettre"):
         correct_count = 0
         category_correct_count = {
@@ -129,7 +128,7 @@ def main():
             "Visualization": 0
         }
 
-        # Create containers for correct and incorrect answers
+        # Création des conteneurs pour les réponses correctes et incorrectes
         correct_container = st.container()
         incorrect_container = st.container()
         
@@ -143,8 +142,8 @@ def main():
             correct_answers = question.get("answer_text", "").split(",")
             user_answer = st.session_state.user_answers[question["question_text"]]
 
-            # Check if the user's answer is correct
-            if isinstance(user_answer, list):  # If multiple answers were selected
+            # Vérification si la réponse de l'utilisateur est correcte
+            if isinstance(user_answer, list):  # Pour les réponses multiples
                 if set(user_answer) == set(correct_answers):
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
@@ -153,7 +152,7 @@ def main():
                 else:
                     with incorrect_container:
                         st.error(f"**Question {idx}:** {question['question_text']}\nVotre réponse : {', '.join(user_answer)}\nRéponse(s) correcte(s) : {', '.join(correct_answers)}")
-            else:  # Single answer
+            else:  # Pour une réponse unique
                 if user_answer in correct_answers:
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
@@ -169,13 +168,13 @@ def main():
         st.markdown("---")
         st.markdown(f"**Vous avez obtenu {correct_count} sur {total_questions} questions correctes ({correct_percentage:.2f}%)!**")
 
-        # Congratulatory message based on performance
+        # Message de félicitations basé sur la performance
         if correct_percentage >= 70:
             st.success("Félicitations ! Vous avez réussi le quiz ! 🎉")
         else:
             st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
 
-        # Create a gauge chart with a target value of 70
+        # Création du graphique de jauge avec une valeur cible de 70
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=correct_percentage,
@@ -215,7 +214,7 @@ def main():
         st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
         st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
 
-        # Plot a histogram
+        # Création de l'histogramme
         categories = list(category_correct_count.keys())
         correct_values = list(category_correct_count.values())
 
@@ -227,6 +226,14 @@ def main():
         ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))
 
         st.pyplot(fig)
+
+        # Bouton pour recommencer le quiz
+        if st.button("Reprendre"):
+            # Réinitialisation des variables de session
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            # Rechargement de la page
+            st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
