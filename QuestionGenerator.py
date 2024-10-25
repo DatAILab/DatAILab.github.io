@@ -253,9 +253,9 @@ def main():
                     padding: 8px 16px;
                     background-color: #ffffff
                     color: white;
-                    text-align: center;
+                    text-align: right;
                     text-decoration: none;
-                    font-size: 16px;
+                    font-size: 24px;
                     margin: 4px 2px;
                     cursor: pointer;
                     border-radius: 4px;">
