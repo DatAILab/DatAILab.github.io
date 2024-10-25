@@ -55,7 +55,26 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    
+    # Back to top link in the second column
+        with col2:
+            st.markdown(
+                '''
+                <a href="#top" style="
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background-color: #ffffff
+                    color: white;
+                    text-align: center;
+                    text-decoration: none;
+                    font-size: 24px;
+                    margin: 4px 2px;
+                    cursor: pointer;
+                    border-radius: 4px;">
+                    ⬆️
+                </a>
+                ''',
+                unsafe_allow_html=True
+            )
 
     # Récupération de toutes les questions
     questions = fetch_all_questions()
@@ -253,7 +272,7 @@ def main():
                     padding: 8px 16px;
                     background-color: #ffffff
                     color: white;
-                    text-align: right;
+                    text-align: center;
                     text-decoration: none;
                     font-size: 24px;
                     margin: 4px 2px;
