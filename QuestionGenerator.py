@@ -61,15 +61,15 @@ def main():
             '''
             <a href="#top" style="
                 display: inline-block;
-                padding: 8px 16px;
+                padding: 4px 8px;
                 background-color: #ffffff;
                 color: white;
                 text-align: center;
                 text-decoration: none;
                 font-size: 16px;
-                margin: 4px 2px;
+                margin: 2px 1px;
                 cursor: pointer;
-                border-radius: 4px;">
+                border-radius: 2px;">
                 ⬆️ 
             </a>
             ''',
@@ -263,26 +263,7 @@ def main():
                 # Rechargement de la page
                 st.experimental_rerun()
         
-        # Back to top link in the second column
-        with col2:
-            st.markdown(
-                '''
-                <a href="#top" style="
-                    display: inline-block;
-                    padding: 8px 16px;
-                    background-color: #ffffff;
-                    color: white;
-                    text-align: center;
-                    text-decoration: none;
-                    font-size: 16px;
-                    margin: 4px 2px;
-                    cursor: pointer;
-                    border-radius: 4px;">
-                    ⬆️
-                </a>
-                ''',
-                unsafe_allow_html=True
-            )
+        
 
 if __name__ == "__main__":
     main()
