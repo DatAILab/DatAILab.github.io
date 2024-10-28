@@ -46,6 +46,33 @@ def fetch_all_questions():
         st.error(f"Erreur lors de la récupération des questions: {e}")
         return []
 
+def sample_questions(all_questions):
+    prepare_data_questions = [q for q in all_questions if q.get("Category") == "Prepare the data"]
+    model_data_questions = [q for q in all_questions if q.get("Category") == "Model the data"]
+    pbi_service_questions = [q for q in all_questions if q.get("Category") == "PBI Service"]
+    visualization_questions = [q for q in all_questions if q.get("Category") == "Visualization"]
+
+    # Ensure we have enough questions in each category
+    if (len(prepare_data_questions) < 12 or len(model_data_questions) < 10 or 
+        len(visualization_questions) < 12 or len(pbi_service_questions) < 6):
+        st.error("Pas assez de questions dans une ou plusieurs catégories.")
+        return []
+
+    sampled = (
+        random.sample(prepare_data_questions, 12) +
+        random.sample(model_data_questions, 10) +
+        random.sample(visualization_questions, 12) +
+        random.sample(pbi_service_questions, 6)
+    )
+    random.shuffle(sampled)  # Shuffle the combined questions
+    return sampled
+
+def reset_quiz():
+    # Clear all quiz-related session state
+    for key in list(st.session_state.keys()):
+        if key in ['sampled_questions', 'user_answers', 'quiz_id']:
+            del st.session_state[key]
+
 def main():
     # CSS personnalisé pour la minimisation de la barre latérale et le bouton retour en haut
     st.markdown(
@@ -96,32 +123,24 @@ def main():
 
     st.title("Quiz Certification PL-300")
 
-    # Initialisation de Firebase
+    # Initialize Firebase
     initialize_firebase()
 
-    # Récupération de toutes les questions
-    questions = fetch_all_questions()
+    # Initialize quiz_id in session state if not present
+    if 'quiz_id' not in st.session_state:
+        st.session_state.quiz_id = random.randint(1, 1000000)
 
-    # Vérification si les questions sont déjà échantillonnées et stockées dans la session
+    # Get or generate questions
     if 'sampled_questions' not in st.session_state:
-        # Filtrage des questions par catégorie
-        prepare_data_questions = [q for q in questions if q.get("Category") == "Prepare the data"]
-        model_data_questions = [q for q in questions if q.get("Category") == "Model the data"]
-        pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
-        visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
-
-        # Échantillonnage aléatoire du nombre requis de questions pour chaque catégorie
-        prepare_data_questions = random.sample(prepare_data_questions, 12)
-        model_data_questions = random.sample(model_data_questions, 10)
-        visualization_questions = random.sample(visualization_questions, 12)
-        pbi_service_questions = random.sample(pbi_service_questions, 6)
-
-        # Combinaison des questions
-        st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
+        all_questions = fetch_all_questions()
+        st.session_state.sampled_questions = sample_questions(all_questions)
+        if not st.session_state.sampled_questions:
+            st.error("Impossible de générer le quiz. Veuillez réessayer.")
+            return
 
     questions = st.session_state.sampled_questions
 
-    # Stockage des réponses de l'utilisateur dans la session
+    # Initialize user answers if not present
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
@@ -154,19 +173,19 @@ def main():
         correct_answers = question.get("answer_text", "").split(",")
 
         if len(correct_answers) == 1:  # Réponse unique
-            selected_answer = st.radio("Choisissez votre réponse:", choices, key=f"radio_{index}")
+            selected_answer = st.radio("Choisissez votre réponse:", choices, key=f"radio_{index}_{st.session_state.quiz_id}")
             if selected_answer:
                 st.session_state.user_answers[question["question_text"]] = [selected_answer]
         elif len(correct_answers) > 1:  # Réponses multiples
             selected_answers = []
             for choice in choices:
-                unique_key = f"checkbox_{index}_{choice.strip()}"
+                unique_key = f"checkbox_{index}_{choice.strip()}_{st.session_state.quiz_id}"
                 if st.checkbox(choice.strip(), key=unique_key):
                     selected_answers.append(choice.strip())
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Bouton de soumission pour vérifier les réponses
-    if st.button("Soumettre"):
+    if st.button("Soumettre", key=f"submit_{st.session_state.quiz_id}"):
         correct_count = 0
         category_correct_count = {
             "Prepare the data": 0,
@@ -271,6 +290,8 @@ def main():
         ax.set_ylabel('Réponses correctes')
         ax.set_title('Réponses correctes par catégorie')
         ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
 
         st.pyplot(fig)
 
@@ -279,29 +300,8 @@ def main():
         
         # Bouton Reprendre dans la première colonne avec nouvelle logique de régénération
         with col1:
-            if st.button("Reprendre"):
-                # Récupérer de nouvelles questions
-                new_questions = fetch_all_questions()
-                
-                # Filtrer et échantillonner de nouvelles questions
-                prepare_data_questions = [q for q in new_questions if q.get("Category") == "Prepare the data"]
-                model_data_questions = [q for q in new_questions if q.get("Category") == "Model the data"]
-                pbi_service_questions = [q for q in new_questions if q.get("Category") == "PBI Service"]
-                visualization_questions = [q for q in new_questions if q.get("Category") == "Visualization"]
-
-                # Échantillonnage aléatoire du nombre requis de questions pour chaque catégorie
-                prepare_data_questions = random.sample(prepare_data_questions, 12)
-                model_data_questions = random.sample(model_data_questions, 10)
-                visualization_questions = random.sample(visualization_questions, 12)
-                pbi_service_questions = random.sample(pbi_service_questions, 6)
-
-                # Combinaison des nouvelles questions
-                st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
-                
-                # Réinitialiser les réponses de l'utilisateur pour les nouvelles questions
-                st.session_state.user_answers = {q["question_text"]: [] for q in st.session_state.sampled_questions}
-                
-                # Recharger la page
+            if st.button("Reprendre", key=f"restart_{st.session_state.quiz_id}"):
+                reset_quiz()
                 st.experimental_rerun()
 
 if __name__ == "__main__":
