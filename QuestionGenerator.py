@@ -42,10 +42,11 @@ def fetch_all_questions():
         return []
 
 def init_session_state():
-    if 'initialized' not in st.session_state:
+    if 'initialized' not in st.session_state or st.session_state.get('needs_reset', False):
         st.session_state.initialized = True
         st.session_state.quiz_version = int(time.time())
         st.session_state.submitted = False
+        st.session_state.needs_reset = False
         
         # Fetch and sample questions
         all_questions = fetch_all_questions()
@@ -69,11 +70,12 @@ def init_session_state():
         st.session_state.user_answers = {q["question_text"]: [] for q in st.session_state.questions}
 
 def reset_quiz():
-    # Clear specific session state variables
-    keys_to_clear = ['initialized', 'quiz_version', 'questions', 'user_answers', 'submitted']
-    for key in keys_to_clear:
-        if key in st.session_state:
-            del st.session_state[key]
+    # Mark the quiz for reset instead of directly modifying session state
+    st.session_state.needs_reset = True
+    # Clear user answers
+    st.session_state.user_answers = {}
+    # Reset submission status
+    st.session_state.submitted = False
 
 def main():
     st.markdown("""
