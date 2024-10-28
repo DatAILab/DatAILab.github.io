@@ -277,21 +277,14 @@ def main():
         # Création de deux colonnes pour les boutons en bas
         col1, col2 = st.columns(2)
         
-# Bouton Reprendre dans la première colonne
-
-        with col1:
-
-            if st.button("Reprendre"):
-
-                # Réinitialisation des variables de session
-
-                for key in list(st.session_state.keys()):
-
-                    del st.session_state[key]
-
-                # Rechargement de la page
-
-                st.experimental_rerun()
+        # Bouton Reprendre dans la première colonne
+        with col1:
+            if st.button("Reprendre"):
+                # Réinitialisation des variables de session
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                # Rechargement de la page
+                st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
