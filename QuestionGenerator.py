@@ -277,31 +277,21 @@ def main():
         # Création de deux colonnes pour les boutons en bas
         col1, col2 = st.columns(2)
         
-       # CSS for button styling (optional)
-st.markdown("""
-<style>
-.custom-btn {
-  background-color: #00008B; /* Adjust color as desired */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
+# Bouton Reprendre dans la première colonne
 
-.custom-btn:hover {
-  background-color: #24305E; /* Adjust hover color as desired */
-}
-</style>
-""", unsafe_allow_html=True)
+        with col1:
 
-# Bouton Reprendre layout
-col1, col2 = st.columns(2)  # Create two columns
+            if st.button("Reprendre"):
 
-with col1:
-  # Button with Google.tn link using Streamlit unsafe_allow_html (caution advised)
-  st.write(f"""<a href="https://quizdatailab.streamlit.app/" target="_blank" class="custom-btn">Reprendre</a>""", unsafe_allow_html=True)
+                # Réinitialisation des variables de session
+
+                for key in list(st.session_state.keys()):
+
+                    del st.session_state[key]
+
+                # Rechargement de la page
+
+                st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
