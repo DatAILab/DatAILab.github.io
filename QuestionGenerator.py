@@ -277,13 +277,31 @@ def main():
         # Création de deux colonnes pour les boutons en bas
         col1, col2 = st.columns(2)
         
-        # Bouton Reprendre dans la première colonne
+        # Bouton Reprendre dans la première colonne avec nouvelle logique de régénération
         with col1:
             if st.button("Reprendre"):
-                # Réinitialisation des variables de session
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
-                # Rechargement de la page
+                # Récupérer de nouvelles questions
+                new_questions = fetch_all_questions()
+                
+                # Filtrer et échantillonner de nouvelles questions
+                prepare_data_questions = [q for q in new_questions if q.get("Category") == "Prepare the data"]
+                model_data_questions = [q for q in new_questions if q.get("Category") == "Model the data"]
+                pbi_service_questions = [q for q in new_questions if q.get("Category") == "PBI Service"]
+                visualization_questions = [q for q in new_questions if q.get("Category") == "Visualization"]
+
+                # Échantillonnage aléatoire du nombre requis de questions pour chaque catégorie
+                prepare_data_questions = random.sample(prepare_data_questions, 12)
+                model_data_questions = random.sample(model_data_questions, 10)
+                visualization_questions = random.sample(visualization_questions, 12)
+                pbi_service_questions = random.sample(pbi_service_questions, 6)
+
+                # Combinaison des nouvelles questions
+                st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
+                
+                # Réinitialiser les réponses de l'utilisateur pour les nouvelles questions
+                st.session_state.user_answers = {q["question_text"]: [] for q in st.session_state.sampled_questions}
+                
+                # Recharger la page
                 st.experimental_rerun()
 
 if __name__ == "__main__":
