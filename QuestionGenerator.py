@@ -46,7 +46,17 @@ def fetch_all_questions():
     except Exception as e:
         st.error(f"Erreur lors de la récupération des questions: {e}")
         return []
+# Function to initialize the timer
+def init_timer():
+    if 'time_left' not in st.session_state:
+        st.session_state.time_left = 60 * 60  # 60 minutes in seconds
 
+# Function to update the timer
+def update_timer():
+    if 'time_left' in st.session_state and st.session_state.time_left > 0:
+        st.session_state.time_left -= 1
+    else:
+        st.stop()  # Stop the quiz when the time is up
 def main():
     # CSS personnalisé pour la minimisation de la barre latérale et le bouton retour en haut
     st.markdown(
