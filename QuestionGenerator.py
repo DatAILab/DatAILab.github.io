@@ -95,6 +95,21 @@ def main():
     )
 
     st.title("Quiz Certification PL-300")
+    # Initialize the timer
+    init_timer()
+    
+    # Display the timer
+    mins, secs = divmod(st.session_state.time_left, 60)
+    st.write(f"Time left: {mins:02d}:{secs:02d}")
+
+    # Add a placeholder to update the timer every second
+    timer_placeholder = st.empty()
+    while st.session_state.time_left > 0:
+        with timer_placeholder.container():
+            time.sleep(1)
+            update_timer()
+            mins, secs = divmod(st.session_state.time_left, 60)
+            st.write(f"Time left: {mins:02d}:{secs:02d}")
 
     # Initialisation de Firebase
     initialize_firebase()
