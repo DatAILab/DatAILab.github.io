@@ -67,7 +67,7 @@ def display_timer():
     if (current_time - st.session_state.last_update).total_seconds() >= 1:
         st.session_state.last_update = current_time
         time.sleep(0.1)  # Small delay to prevent excessive reruns
-        st.experimental_rerun()
+        st.rerun()
     
     if total_seconds_remaining <= 0:
         st.markdown("""
@@ -156,7 +156,7 @@ def main():
         if st.button("Recommencer le quiz"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
-            st.experimental_rerun()
+            st.rerun()
         return
 
     # Fetch and prepare questions
@@ -168,10 +168,16 @@ def main():
         pbi_service_questions = [q for q in questions if q.get("Category") == "PBI Service"]
         visualization_questions = [q for q in questions if q.get("Category") == "Visualization"]
 
-        prepare_data_questions = random.sample(prepare_data_questions, 12)
-        model_data_questions = random.sample(model_data_questions, 10)
-        visualization_questions = random.sample(visualization_questions, 12)
-        pbi_service_questions = random.sample(pbi_service_questions, 6)
+        # Only sample if we have enough questions in each category
+        n_prepare = min(len(prepare_data_questions), 12)
+        n_model = min(len(model_data_questions), 10)
+        n_viz = min(len(visualization_questions), 12)
+        n_service = min(len(pbi_service_questions), 6)
+
+        prepare_data_questions = random.sample(prepare_data_questions, n_prepare)
+        model_data_questions = random.sample(model_data_questions, n_model)
+        visualization_questions = random.sample(visualization_questions, n_viz)
+        pbi_service_questions = random.sample(pbi_service_questions, n_service)
 
         st.session_state.sampled_questions = prepare_data_questions + model_data_questions + visualization_questions + pbi_service_questions
 
@@ -202,7 +208,9 @@ def main():
                     st.error(f"Erreur de chargement de l'image: {e}")
 
         choices = question.get("Choices", "").split(",")
+        choices = [choice.strip() for choice in choices]  # Strip whitespace from choices
         correct_answers = question.get("answer_text", "").split(",")
+        correct_answers = [answer.strip() for answer in correct_answers]  # Strip whitespace from answers
 
         if len(correct_answers) == 1:
             selected_answer = st.radio(
@@ -216,9 +224,9 @@ def main():
         else:
             selected_answers = []
             for choice in choices:
-                unique_key = f"checkbox_{index}_{choice.strip()}"
-                if st.checkbox(choice.strip(), key=unique_key):
-                    selected_answers.append(choice.strip())
+                unique_key = f"checkbox_{index}_{choice}"
+                if st.checkbox(choice, key=unique_key):
+                    selected_answers.append(choice)
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
     # Submit button and results
@@ -312,16 +320,22 @@ def main():
         st.plotly_chart(gauge_fig)
 
         # Display category results
-        st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
-        st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
-        st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
-        st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
+        category_targets = {
+            "Prepare the data": 12,
+            "Model the data": 10,
+            "PBI Service": 6,
+            "Visualization": 12
+        }
+
+        for category, target in category_targets.items():
+            actual = category_correct_count[category]
+            st.markdown(f"**Dans la catégorie « {category} », vous avez obtenu {actual} questions correctes sur {target}.**")
 
         # Create and display histogram
         categories = list(category_correct_count.keys())
         correct_values = list(category_correct_count.values())
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 6))
         ax.bar(categories, correct_values, color='skyblue')
         ax.set_xlabel('Catégorie')
         ax.set_ylabel('Réponses correctes')
@@ -335,7 +349,7 @@ def main():
         if st.button("Recommencer"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
-            st.experimental_rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     main()
