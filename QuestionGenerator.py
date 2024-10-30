@@ -51,6 +51,7 @@ def initialize_timer():
     if 'start_time' not in st.session_state:
         st.session_state.start_time = datetime.now()
         st.session_state.end_time = st.session_state.start_time + timedelta(minutes=60)
+        st.session_state.last_update = datetime.now()
 
 def format_time(seconds):
     minutes = int(seconds // 60)
@@ -61,6 +62,12 @@ def display_timer():
     current_time = datetime.now()
     remaining_time = st.session_state.end_time - current_time
     total_seconds_remaining = remaining_time.total_seconds()
+    
+    # Auto-refresh logic
+    if (current_time - st.session_state.last_update).total_seconds() >= 1:
+        st.session_state.last_update = current_time
+        time.sleep(0.1)  # Small delay to prevent excessive reruns
+        st.experimental_rerun()
     
     if total_seconds_remaining <= 0:
         st.markdown("""
@@ -198,10 +205,15 @@ def main():
         correct_answers = question.get("answer_text", "").split(",")
 
         if len(correct_answers) == 1:
-            selected_answer = st.radio("Choisissez votre réponse:", choices, key=f"radio_{index}")
+            selected_answer = st.radio(
+                "Choisissez votre réponse:",
+                choices,
+                key=f"radio_{index}",
+                index=None
+            )
             if selected_answer:
                 st.session_state.user_answers[question["question_text"]] = [selected_answer]
-        elif len(correct_answers) > 1:
+        else:
             selected_answers = []
             for choice in choices:
                 unique_key = f"checkbox_{index}_{choice.strip()}"
@@ -229,10 +241,11 @@ def main():
             st.markdown("### ❌ Questions incorrectes:")
 
         for idx, question in enumerate(questions, 1):
-            correct_answers = question.get("answer_text", "").split(",")
+            correct_answers = [ans.strip() for ans in question.get("answer_text", "").split(",")]
             user_answer = st.session_state.user_answers[question["question_text"]]
-
+            
             if isinstance(user_answer, list):
+                user_answer = [ans.strip() for ans in user_answer]
                 if set(user_answer) == set(correct_answers):
                     correct_count += 1
                     category_correct_count[question["Category"]] += 1
@@ -313,6 +326,7 @@ def main():
         ax.set_xlabel('Catégorie')
         ax.set_ylabel('Réponses correctes')
         ax.set_title('Réponses correctes par catégorie')
+        plt.xticks(rotation=45, ha='right')
         ax.set_yticks(np.arange(0, max(correct_values) + 1, 1))
 
         st.pyplot(fig)
