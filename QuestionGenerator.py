@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 import random
-import time
 from datetime import datetime, timedelta
+import time
 
 # Initialisation de Firebase
 def initialize_firebase():
@@ -52,37 +52,51 @@ def initialize_timer():
         st.session_state.start_time = datetime.now()
         st.session_state.end_time = st.session_state.start_time + timedelta(minutes=60)
 
+def format_time(seconds):
+    minutes = int(seconds // 60)
+    remaining_seconds = int(seconds % 60)
+    return f"{minutes:02d}:{remaining_seconds:02d}"
+
 def display_timer():
     current_time = datetime.now()
     remaining_time = st.session_state.end_time - current_time
-    
-    # Convert to total seconds for comparison
     total_seconds_remaining = remaining_time.total_seconds()
     
     if total_seconds_remaining <= 0:
-        st.error("⏰ Le temps est écoulé!")
+        st.markdown("""
+            <div class="fixed-timer" style="color: red;">
+                ⏰ 00:00
+            </div>
+        """, unsafe_allow_html=True)
         return True
     
-    # Calculate minutes and seconds
-    minutes = int(total_seconds_remaining // 60)
-    seconds = int(total_seconds_remaining % 60)
+    time_str = format_time(total_seconds_remaining)
+    color = "green" if total_seconds_remaining > 600 else "orange" if total_seconds_remaining > 300 else "red"
     
-    # Display timer with appropriate color based on remaining time
-    if minutes >= 10:
-        st.success(f"⏳ Temps restant: {minutes:02d}:{seconds:02d}")
-    elif minutes >= 5:
-        st.warning(f"⏳ Temps restant: {minutes:02d}:{seconds:02d}")
-    else:
-        st.error(f"⏳ Temps restant: {minutes:02d}:{seconds:02d}")
+    st.markdown(f"""
+        <div class="fixed-timer" style="color: {color};">
+            ⏰ {time_str}
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Return False if time hasn't expired
     return False
 
 def main():
-    # CSS personnalisé pour la minimisation de la barre latérale et le bouton retour en haut
-    st.markdown(
-        """
+    # CSS for fixed timer and other styling
+    st.markdown("""
         <style>
+        .fixed-timer {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            z-index: 9999;
+        }
+        
         [data-testid="stSidebar"][aria-expanded="true"] {
             min-width: 1px;
             max-width: 200px;
@@ -91,7 +105,6 @@ def main():
             margin-left: -1px;
         }
         
-        /* Style pour le bouton retour en haut */
         .back-to-top {
             position: fixed;
             bottom: 20px;
@@ -108,44 +121,38 @@ def main():
         .back-to-top:hover {
             background-color: #262730;
         }
+
+        .stButton button {
+            width: 100%;
+        }
         </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
     st.markdown('<div id="top"></div>', unsafe_allow_html=True)
-    st.markdown(
-        '''
+    st.markdown("""
         <a href="#top" class="back-to-top">
             ⬆️
         </a>
-        ''',
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
     st.title("Quiz Certification PL-300")
 
-    # Initialize Firebase
+    # Initialize Firebase and timer
     initialize_firebase()
-    
-    # Initialize timer when starting a new quiz
     initialize_timer()
     
-    # Create a placeholder for the timer at the top of the page
-    timer_placeholder = st.empty()
-    
-    # Update and display the timer
+    # Display timer
     time_expired = display_timer()
     
-    # If time has expired, show message and option to restart
     if time_expired:
+        st.error("Le temps est écoulé! Veuillez soumettre vos réponses ou recommencer le quiz.")
         if st.button("Recommencer le quiz"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.experimental_rerun()
         return
 
-    # Rest of your existing quiz logic
+    # Fetch and prepare questions
     questions = fetch_all_questions()
 
     if 'sampled_questions' not in st.session_state:
@@ -166,7 +173,7 @@ def main():
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q["question_text"]: [] for q in questions}
 
-    # Your existing question display and answer logic...
+    # Display questions
     for index, question in enumerate(questions, start=1):
         st.write(f"**Question {index}:** {question['question_text']}")
         
@@ -202,9 +209,8 @@ def main():
                     selected_answers.append(choice.strip())
             st.session_state.user_answers[question["question_text"]] = selected_answers
 
-    # Submit button and results display
+    # Submit button and results
     if st.button("Soumettre") or time_expired:
-        # Your existing submission logic...
         correct_count = 0
         category_correct_count = {
             "Prepare the data": 0,
@@ -245,6 +251,7 @@ def main():
                     with incorrect_container:
                         st.error(f"**Question {idx}:** {question['question_text']}\n\n**Votre réponse :** {user_answer}\n\n**Réponse(s) correcte(s) :** {', '.join(correct_answers)}")
 
+        # Calculate and display results
         total_questions = len(questions)
         correct_percentage = (correct_count / total_questions) * 100
 
@@ -256,7 +263,7 @@ def main():
         else:
             st.error("Malheureusement, vous n'avez pas réussi le quiz. Vous aurez plus de chance la prochaine fois !")
 
-        # Your existing visualization code...
+        # Display gauge chart
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=correct_percentage,
@@ -291,13 +298,13 @@ def main():
 
         st.plotly_chart(gauge_fig)
 
-        # Display category-wise results
+        # Display category results
         st.markdown(f"**Dans la catégorie « Préparer les données », vous avez obtenu {category_correct_count['Prepare the data']} questions correctes sur 12.**")
         st.markdown(f"**Dans la catégorie « Modéliser les données », vous avez obtenu {category_correct_count['Model the data']} questions correctes sur 10.**")
         st.markdown(f"**Dans la catégorie « Power BI Service», vous avez obtenu {category_correct_count['PBI Service']} questions correctes sur 6.**")
         st.markdown(f"**Dans la catégorie « Visualisation », vous avez obtenu {category_correct_count['Visualization']} questions correctes sur 12.**")
 
-        # Create histogram
+        # Create and display histogram
         categories = list(category_correct_count.keys())
         correct_values = list(category_correct_count.values())
 
