@@ -68,11 +68,11 @@ def initialize_firebase():
         })
         firebase_admin.initialize_app(cred)
         logger.info("Firebase initialized successfully")
-      return True
+        return True
     except Exception as e:
-      logger.error(f"Firebase initialization failed: {e}")
-      st.error(f"Error initializing Firebase: {e}")
-      return False
+        logger.error(f"Firebase initialization failed: {e}")
+        st.error(f"Error initializing Firebase: {e}")
+        return False
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_all_questions():
