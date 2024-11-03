@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import plotly.graph_objects as go
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 import time
 import logging
 
@@ -62,21 +62,18 @@ def fetch_all_questions():
     """Fetch all questions from Firestore database."""
     try:
         logger.info("Starting to fetch questions...")
-        # Check if Firebase is initialized
         if not initialize_firebase():
             return []
         db = firestore.client()
         questions_ref = db.collection("questions")
-        # Add timeout to the query
         query_snapshot = questions_ref.get(timeout=30)
-        questions = []
-        for doc in query_snapshot:
-            question_data = doc.to_dict()
-            questions.append(question_data)
+        questions = [doc.to_dict() for doc in query_snapshot]
         logger.info(f"Successfully fetched {len(questions)} questions")
+        
         if not questions:
             st.warning("Aucune question trouvée dans la base de données.")
             logger.warning("No questions found in database")
+        
         return questions
     except Exception as e:
         logger.error(f"Error fetching questions: {e}")
@@ -100,13 +97,13 @@ def display_timer():
     remaining_time = max(st.session_state.duration - elapsed_time, 0)
     time_str = format_time(remaining_time)
     progress = 1 - (remaining_time / st.session_state.duration)
-    
+
     col1, col2 = st.columns([3, 1])
     
     with col2:
-        if remaining_time <= 300:  # Less than 5 minutes
+        if remaining_time <= 300:
             st.error(f"⏰ {time_str}")
-        elif remaining_time <= 600:  # Less than 10 minutes
+        elif remaining_time <= 600:
             st.warning(f"⏰ {time_str}")
         else:
             st.info(f"⏰ {time_str}")
@@ -247,10 +244,10 @@ def main():
                 }
 
                 st.session_state.sampled_questions = (
-                    random.sample(questions_by_category["Prepare the data"], 12) +
-                    random.sample(questions_by_category["Model the data"], 10) +
-                    random.sample(questions_by_category["Visualization"], 12) +
-                    random.sample(questions_by_category["PBI Service"], 6)
+                    random.sample(questions_by_category["Prepare the data"], min(len(questions_by_category["Prepare the data"]),12)) +
+                    random.sample(questions_by_category["Model the data"], min(len(questions_by_category["Model the data"]),10)) +
+                    random.sample(questions_by_category["Visualization"], min(len(questions_by_category["Visualization"]),12)) +
+                    random.sample(questions_by_category["PBI Service"], min(len(questions_by_category["PBI Service"]),6))
                 )
                 
                 questions = st.session_state.sampled_questions
@@ -278,19 +275,13 @@ def main():
                         # Handle images 
                         if 'image_url' in question and question['image_url']:
                             image_urls = [url.strip() for url in question['image_url'].split(',')]
-                            if len(image_urls) > 1:
-                                cols = st.columns(len(image_urls))
-                                for idx, url in enumerate(image_urls):
-                                    if url:
-                                        try:
-                                            cols[idx].image(url, use_column_width=True)
-                                        except Exception as e:
-                                            cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
-                            else:
-                                try:
-                                    st.image(image_urls[0], use_column_width=True)
-                                except Exception as e:
-                                    st.error("Erreur de chargement de l'image")
+                            cols = st.columns(len(image_urls))
+                            for idx, url in enumerate(image_urls):
+                                if url:
+                                    try:
+                                        cols[idx].image(url, use_column_width=True)
+                                    except Exception as e:
+                                        cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
 
                         # Handle answers 
                         choices = [choice.strip() for choice in question.get("Choices", "").split(",")]
