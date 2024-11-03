@@ -1,7 +1,6 @@
-streamlit
-firebase-admin
-matplotlib
-numpy
-plotly
-time
-datetime
+streamlit==1.39.0
+firebase-admin==6.2.0
+matplotlib==3.7.1
+numpy==1.24.3
+plotly==5.13.1
+python-dateutil==2.8.2
