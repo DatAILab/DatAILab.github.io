@@ -1,16 +1,14 @@
-# requirements.txt contents:
-# streamlit==1.39.0
-# firebase-admin==6.2.0
-# matplotlib==3.7.1
-# numpy==1.24.3
-# plotly==5.13.1
-# python-dateutil==2.8.2
+# requirements.txt
+streamlit>=1.28.0
+firebase-admin>=6.2.0
+plotly>=5.13.1
+python-dateutil>=2.8.2
+numpy>=1.24.0
 
+# main.py
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
-import matplotlib.pyplot as plt
-import numpy as np
 import plotly.graph_objects as go
 import random
 from datetime import datetime, timedelta
@@ -117,9 +115,9 @@ def display_timer():
     col1, col2 = st.columns([3, 1])
     
     with col2:
-        if remaining_time <= 300:
+        if remaining_time <= 300:  # Less than 5 minutes
             st.error(f"⏰ {time_str}")
-        elif remaining_time <= 600:
+        elif remaining_time <= 600:  # Less than 10 minutes
             st.warning(f"⏰ {time_str}")
         else:
             st.info(f"⏰ {time_str}")
@@ -207,7 +205,6 @@ def display_results(correct_count, category_correct_count, total_questions):
         st.plotly_chart(gauge_fig)
 
     with col2:
-        # Score message
         if correct_percentage >= 70:
             st.success(f"""
             # 🎉 Félicitations !
@@ -278,7 +275,6 @@ def main():
     # Check if time is up
     if time_is_up and 'quiz_submitted' not in st.session_state:
         st.session_state.quiz_submitted = True
-        st.error("⏰ Le temps est écoulé ! Le quiz va être automatiquement soumis.")
         st.experimental_rerun()
 
     # Display questions if quiz not submitted
