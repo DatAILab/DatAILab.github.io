@@ -5,10 +5,12 @@ import plotly.graph_objects as go
 import random
 from datetime import datetime, timedelta
 import time
+import logging
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 # Page configuration
 st.set_page_config(
     page_title="Quiz PL-300",
@@ -19,32 +21,13 @@ st.set_page_config(
 
 # Custom CSS
 st.markdown("""
-    <style>
-    .stProgress > div > div > div > div {
-        background-color: #1f77b4;
-    }
-    .stProgress {
-        margin-bottom: 20px;
-    }
-    .st-emotion-cache-16idsys p {
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .quiz-header {
-        text-align: center;
-        padding: 20px;
-        background-color: #f0f2f6;
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-    .question-card {
-        padding: 20px;
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    </style>
+<style>
+.stProgress > div > div > div > div { background-color: #1f77b4; }
+.stProgress { margin-bottom: 20px; }
+.st-emotion-cache-16idsys p { font-size: 20px; font-weight: bold; }
+.quiz-header { text-align: center; padding: 20px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 30px; }
+.question-card { padding: 20px; background-color: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+</style>
 """, unsafe_allow_html=True)
 
 # Firebase initialization function
@@ -65,10 +48,10 @@ def initialize_firebase():
                 "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
                 "client_x509_cert_url": st.secrets["client_x509_cert_url"],
                 "universe_domain": st.secrets["universe_domain"]
-        })
-        firebase_admin.initialize_app(cred)
-        logger.info("Firebase initialized successfully")
-        return True
+            })
+            firebase_admin.initialize_app(cred)
+            logger.info("Firebase initialized successfully")
+            return True
     except Exception as e:
         logger.error(f"Firebase initialization failed: {e}")
         st.error(f"Error initializing Firebase: {e}")
@@ -79,28 +62,21 @@ def fetch_all_questions():
     """Fetch all questions from Firestore database."""
     try:
         logger.info("Starting to fetch questions...")
-        
         # Check if Firebase is initialized
         if not initialize_firebase():
             return []
-            
         db = firestore.client()
         questions_ref = db.collection("questions")
-        
         # Add timeout to the query
         query_snapshot = questions_ref.get(timeout=30)
-
         questions = []
         for doc in query_snapshot:
             question_data = doc.to_dict()
             questions.append(question_data)
-
         logger.info(f"Successfully fetched {len(questions)} questions")
-        
         if not questions:
             st.warning("Aucune question trouvée dans la base de données.")
             logger.warning("No questions found in database")
-
         return questions
     except Exception as e:
         logger.error(f"Error fetching questions: {e}")
@@ -122,7 +98,6 @@ def display_timer():
     current_time = time.time()
     elapsed_time = int(current_time - st.session_state.start_time)
     remaining_time = max(st.session_state.duration - elapsed_time, 0)
-    
     time_str = format_time(remaining_time)
     progress = 1 - (remaining_time / st.session_state.duration)
     
@@ -135,7 +110,7 @@ def display_timer():
             st.warning(f"⏰ {time_str}")
         else:
             st.info(f"⏰ {time_str}")
-    
+
     with col1:
         st.progress(progress, "Temps écoulé")
     
@@ -150,11 +125,11 @@ def calculate_results(questions, user_answers):
         "PBI Service": 0,
         "Visualization": 0
     }
-    
+
     with st.expander("Voir les réponses détaillées", expanded=True):
         correct_container = st.container()
         incorrect_container = st.container()
-        
+
         with correct_container:
             st.markdown("### ✅ Questions correctes:")
         
@@ -164,39 +139,33 @@ def calculate_results(questions, user_answers):
         for idx, question in enumerate(questions, 1):
             correct_answers = [ans.strip() for ans in question.get("answer_text", "").split(",")]
             user_answer = user_answers.get(question["question_text"], [])
-            
             is_correct = set(user_answer) == set(correct_answers)
-            
+
             if is_correct:
                 correct_count += 1
                 category_correct_count[question["Category"]] += 1
+                
                 with correct_container:
-                    st.success(f"""
-                    **Question {idx}:** {question['question_text']}  
-                    **Votre réponse :** {', '.join(user_answer)}
-                    """)
+                    st.success(f""" **Question {idx}:** {question['question_text']} **Votre réponse :** {', '.join(user_answer)} """)
             else:
                 with incorrect_container:
-                    st.error(f"""
-                    **Question {idx}:** {question['question_text']}  
-                    **Votre réponse :** {', '.join(user_answer)}  
-                    **Réponse(s) correcte(s) :** {', '.join(correct_answers)}
-                    """)
+                    st.error(f""" **Question {idx}:** {question['question_text']} **Votre réponse :** {', '.join(user_answer)} **Réponse(s) correcte(s) :** {', '.join(correct_answers)} """)
     
     return correct_count, category_correct_count
 
 def display_results(correct_count, category_correct_count, total_questions):
     """Display quiz results with visualizations."""
     correct_percentage = (correct_count / total_questions) * 100
-
+    
     st.markdown("---")
     st.markdown(
-        f"<h2 style='text-align: center;'>Résultats du Quiz</h2>", 
+        f"<h2 style='text-align: center;'>Résultats du Quiz</h2>",
         unsafe_allow_html=True
     )
-    
+
     # Main score display
     col1, col2 = st.columns(2)
+    
     with col1:
         gauge_fig = go.Figure(go.Indicator(
             mode="gauge+number",
@@ -216,24 +185,18 @@ def display_results(correct_count, category_correct_count, total_questions):
                 }
             }
         ))
+        
         st.plotly_chart(gauge_fig)
 
     with col2:
         if correct_percentage >= 70:
-            st.success(f"""
-            # 🎉 Félicitations !
-            Vous avez réussi avec {correct_percentage:.1f}% de bonnes réponses  
-            ({correct_count}/{total_questions} questions)
-            """)
+            st.success(f""" # 🎉 Félicitations ! Vous avez réussi avec {correct_percentage:.1f}% de bonnes réponses ({correct_count}/{total_questions} questions) """)
         else:
-            st.error(f"""
-            # Continuez vos efforts
-            Vous avez obtenu {correct_percentage:.1f}% de bonnes réponses  
-            ({correct_count}/{total_questions} questions)
-            """)
+            st.error(f""" # Continuez vos efforts Vous avez obtenu {correct_percentage:.1f}% de bonnes réponses ({correct_count}/{total_questions} questions) """)
 
     # Category results
     st.markdown("### Résultats par catégorie")
+    
     categories = {
         'Prepare the data': 12,
         'Model the data': 10,
@@ -244,19 +207,18 @@ def display_results(correct_count, category_correct_count, total_questions):
     for category, total in categories.items():
         score = category_correct_count[category]
         percentage = (score / total) * 100
-        st.markdown(f"""
-        #### {category}
-        - Score: {score}/{total} ({percentage:.1f}%)
-        """)
-        st.progress(percentage/100)
+        
+        st.markdown(f""" #### {category} - Score: {score}/{total} ({percentage:.1f}%) """)
+        
+        st.progress(percentage / 100)
 
 def main():
-    
     """Main application function."""
+    
     try:
         st.markdown("<h1 style='text-align: center;'>Quiz Certification PL-300</h1>", unsafe_allow_html=True)
-        
-        # Show loading message
+
+        # Show loading message 
         with st.spinner('Chargement des questions...'):
             # Initialize Firebase and fetch questions
             questions = fetch_all_questions()
@@ -264,114 +226,117 @@ def main():
             if not questions:
                 st.error("Impossible de charger les questions. Veuillez réessayer.")
                 return
-    
-       # Initialize Firebase and timer
-       initialize_firebase()
-       initialize_timer()
-    
-       # Display timer
-       time_is_up = display_timer()
+            
+            # Initialize Firebase and timer
+            initialize_firebase()
+            initialize_timer()
 
-       # Get questions
-       all_questions = fetch_all_questions()
+            # Display timer 
+            time_is_up = display_timer()
 
-       # Sample questions if not already done
-       if 'sampled_questions' not in st.session_state:
-           questions_by_category = {
-               "Prepare the data": [q for q in all_questions if q.get("Category") == "Prepare the data"],
-               "Model the data": [q for q in all_questions if q.get("Category") == "Model the data"],
-               "PBI Service": [q for q in all_questions if q.get("Category") == "PBI Service"],
-               "Visualization": [q for q in all_questions if q.get("Category") == "Visualization"]
-           }
-        
-           st.session_state.sampled_questions = (
-               random.sample(questions_by_category["Prepare the data"], 12) +
-               random.sample(questions_by_category["Model the data"], 10) +
-               random.sample(questions_by_category["Visualization"], 12) +
-               random.sample(questions_by_category["PBI Service"], 6)
-           )
+            # Get questions 
+            all_questions = fetch_all_questions()
 
-       questions = st.session_state.sampled_questions
+            # Sample questions if not already done 
+            if 'sampled_questions' not in st.session_state:
+                questions_by_category = {
+                    "Prepare the data": [q for q in all_questions if q.get("Category") == "Prepare the data"],
+                    "Model the data": [q for q in all_questions if q.get("Category") == "Model the data"],
+                    "PBI Service": [q for q in all_questions if q.get("Category") == "PBI Service"],
+                    "Visualization": [q for q in all_questions if q.get("Category") == "Visualization"]
+                }
 
-       # Initialize user answers
-       if 'user_answers' not in st.session_state:
-           st.session_state.user_answers = {}
-
-       # Check if time is up
-       if time_is_up and 'quiz_submitted' not in st.session_state:
-           st.session_state.quiz_submitted = True
-           st.experimental_rerun()
-
-       # Display questions if quiz not submitted
-       if not st.session_state.get('quiz_submitted', False):
-           for index, question in enumerate(questions, start=1):
-               with st.container():
-                   st.markdown(f"""
-                   <div class="question-card">
-                       <h3>Question {index}</h3>
-                       <p>{question['question_text']}</p>
-                   </div>
-                   """, unsafe_allow_html=True)
+                st.session_state.sampled_questions = (
+                    random.sample(questions_by_category["Prepare the data"], 12) +
+                    random.sample(questions_by_category["Model the data"], 10) +
+                    random.sample(questions_by_category["Visualization"], 12) +
+                    random.sample(questions_by_category["PBI Service"], 6)
+                )
                 
-                   # Handle images
-                   if 'image_url' in question and question['image_url']:
-                       image_urls = [url.strip() for url in question['image_url'].split(',')]
+                questions = st.session_state.sampled_questions
+
+            # Initialize user answers 
+            if 'user_answers' not in st.session_state:
+                st.session_state.user_answers = {}
+
+            # Check if time is up 
+            if time_is_up and 'quiz_submitted' not in st.session_state:
+                st.session_state.quiz_submitted = True
+                st.experimental_rerun()
+
+            # Display questions if quiz not submitted 
+            if not st.session_state.get('quiz_submitted', False):
+                for index, question in enumerate(questions, start=1):
+                    with st.container():
+                        st.markdown(f"""
+                        <div class="question-card">
+                            <h3>Question {index}</h3>
+                            <p>{question['question_text']}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        # Handle images 
+                        if 'image_url' in question and question['image_url']:
+                            image_urls = [url.strip() for url in question['image_url'].split(',')]
+                            if len(image_urls) > 1:
+                                cols = st.columns(len(image_urls))
+                                for idx, url in enumerate(image_urls):
+                                    if url:
+                                        try:
+                                            cols[idx].image(url, use_column_width=True)
+                                        except Exception as e:
+                                            cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
+                            else:
+                                try:
+                                    st.image(image_urls[0], use_column_width=True)
+                                except Exception as e:
+                                    st.error("Erreur de chargement de l'image")
+
+                        # Handle answers 
+                        choices = [choice.strip() for choice in question.get("Choices", "").split(",")]
+                        correct_answers = question.get("answer_text", "").split(",")
+
+                        if len(correct_answers) == 1:
+                            answer = st.radio(
+                                "Sélectionnez votre réponse:",
+                                choices,
+                                key=f"radio_{index}"
+                            )
+                            if answer:
+                                st.session_state.user_answers[question["question_text"]] = [answer]
+                        else:
+                            selected = st.multiselect(
+                                "Sélectionnez toutes les réponses appropriées:",
+                                choices,
+                                key=f"multiselect_{index}"
+                            )
+                            st.session_state.user_answers[question["question_text"]] = selected
+
+                    col1, col2, col3 = st.columns([1, 2, 1])
                     
-                       if len(image_urls) > 1:
-                           cols = st.columns(len(image_urls))
-                           for idx, url in enumerate(image_urls):
-                               if url:
-                                   try:
-                                       cols[idx].image(url, use_column_width=True)
-                                   except Exception as e:
-                                       cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
-                       else:
-                           try:
-                               st.image(image_urls[0], use_column_width=True)
-                           except Exception as e:
-                               st.error("Erreur de chargement de l'image")
+                    with col2:
+                        if st.button("📝 Soumettre le Quiz", use_container_width=True):
+                            st.session_state.quiz_submitted = True
+                            st.experimental_rerun()
 
-                   # Handle answers
-                   choices = [choice.strip() for choice in question.get("Choices", "").split(",")]
-                   correct_answers = question.get("answer_text", "").split(",")
+            # Handle submission 
+            if st.session_state.get('quiz_submitted', False):
+                correct_count, category_correct_count = calculate_results(
+                    questions,
+                    st.session_state.user_answers
+                )
+                
+                display_results(correct_count, category_correct_count, len(questions))
 
-                   if len(correct_answers) == 1:
-                       answer = st.radio(
-                           "Sélectionnez votre réponse:",
-                           choices,
-                           key=f"radio_{index}"
-                       )
-                       if answer:
-                           st.session_state.user_answers[question["question_text"]] = [answer]
-                   else:
-                       selected = st.multiselect(
-                           "Sélectionnez toutes les réponses appropriées:",
-                           choices,
-                           key=f"multiselect_{index}"
-                       )
-                       st.session_state.user_answers[question["question_text"]] = selected
+                col1, col2, col3 = st.columns([1, 2, 1])
+                
+                with col2:
+                    if st.button("🔄 Recommencer le Quiz", use_container_width=True):
+                        for key in list(st.session_state.keys()):
+                            del st.session_state[key]
+                        st.experimental_rerun()
 
-           col1, col2, col3 = st.columns([1, 2, 1])
-           with col2:
-               if st.button("📝 Soumettre le Quiz", use_container_width=True):
-                   st.session_state.quiz_submitted = True
-                   st.experimental_rerun()
-
-       # Handle submission
-       if st.session_state.get('quiz_submitted', False):
-           correct_count, category_correct_count = calculate_results(
-               questions,
-               st.session_state.user_answers
-           )
-           display_results(correct_count, category_correct_count, len(questions))
-
-           col1, col2, col3 = st.columns([1, 2, 1])
-           with col2:
-               if st.button("🔄 Recommencer le Quiz", use_container_width=True):
-                   for key in list(st.session_state.keys()):
-                       del st.session_state[key]
-                   st.experimental_rerun()
-   except Exception as e:
+    except Exception as e:
         logger.error(f"Error in main function: {e}")
         st.error(f"Une erreur est survenue: {e}")
 
