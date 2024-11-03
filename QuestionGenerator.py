@@ -68,7 +68,7 @@ def initialize_firebase():
         firebase_admin.initialize_app(cred)
         logger.info("Firebase initialized successfully")
         return True
-    except Exception as e:
+   except Exception as e:
         logger.error(f"Firebase initialization failed: {e}")
         st.error(f"Error initializing Firebase: {e}")
         return False
