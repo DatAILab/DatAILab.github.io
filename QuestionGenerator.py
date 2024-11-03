@@ -1,11 +1,3 @@
-# requirements.txt
-streamlit>=1.28.0
-firebase-admin>=6.2.0
-plotly>=5.13.1
-python-dateutil>=2.8.2
-numpy>=1.24.0
-
-# main.py
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
