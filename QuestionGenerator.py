@@ -69,9 +69,9 @@ def display_timer():
     col1, col2 = st.columns([3, 1])
     
     with col2:
-        if remaining_time <= 300:
+        if remaining_time <= 300:  # Less than 5 minutes
             st.error(f"⏰ {time_str}")
-        elif remaining_time <= 600:
+        elif remaining_time <= 600:  # Less than 10 minutes
             st.warning(f"⏰ {time_str}")
         else:
             st.info(f"⏰ {time_str}")
