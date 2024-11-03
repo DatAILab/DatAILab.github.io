@@ -265,112 +265,112 @@ def main():
                 st.error("Impossible de charger les questions. Veuillez réessayer.")
                 return
     
-    # Initialize Firebase and timer
-    initialize_firebase()
-    initialize_timer()
+       # Initialize Firebase and timer
+       initialize_firebase()
+       initialize_timer()
     
-    # Display timer
-    time_is_up = display_timer()
+       # Display timer
+       time_is_up = display_timer()
 
-    # Get questions
-    all_questions = fetch_all_questions()
+       # Get questions
+       all_questions = fetch_all_questions()
 
-    # Sample questions if not already done
-    if 'sampled_questions' not in st.session_state:
-        questions_by_category = {
-            "Prepare the data": [q for q in all_questions if q.get("Category") == "Prepare the data"],
-            "Model the data": [q for q in all_questions if q.get("Category") == "Model the data"],
-            "PBI Service": [q for q in all_questions if q.get("Category") == "PBI Service"],
-            "Visualization": [q for q in all_questions if q.get("Category") == "Visualization"]
-        }
+       # Sample questions if not already done
+       if 'sampled_questions' not in st.session_state:
+           questions_by_category = {
+               "Prepare the data": [q for q in all_questions if q.get("Category") == "Prepare the data"],
+               "Model the data": [q for q in all_questions if q.get("Category") == "Model the data"],
+               "PBI Service": [q for q in all_questions if q.get("Category") == "PBI Service"],
+               "Visualization": [q for q in all_questions if q.get("Category") == "Visualization"]
+           }
         
-        st.session_state.sampled_questions = (
-            random.sample(questions_by_category["Prepare the data"], 12) +
-            random.sample(questions_by_category["Model the data"], 10) +
-            random.sample(questions_by_category["Visualization"], 12) +
-            random.sample(questions_by_category["PBI Service"], 6)
-        )
+           st.session_state.sampled_questions = (
+               random.sample(questions_by_category["Prepare the data"], 12) +
+               random.sample(questions_by_category["Model the data"], 10) +
+               random.sample(questions_by_category["Visualization"], 12) +
+               random.sample(questions_by_category["PBI Service"], 6)
+           )
 
-    questions = st.session_state.sampled_questions
+       questions = st.session_state.sampled_questions
 
-    # Initialize user answers
-    if 'user_answers' not in st.session_state:
-        st.session_state.user_answers = {}
+       # Initialize user answers
+       if 'user_answers' not in st.session_state:
+           st.session_state.user_answers = {}
 
-    # Check if time is up
-    if time_is_up and 'quiz_submitted' not in st.session_state:
-        st.session_state.quiz_submitted = True
-        st.experimental_rerun()
+       # Check if time is up
+       if time_is_up and 'quiz_submitted' not in st.session_state:
+           st.session_state.quiz_submitted = True
+           st.experimental_rerun()
 
-    # Display questions if quiz not submitted
-    if not st.session_state.get('quiz_submitted', False):
-        for index, question in enumerate(questions, start=1):
-            with st.container():
-                st.markdown(f"""
-                <div class="question-card">
-                    <h3>Question {index}</h3>
-                    <p>{question['question_text']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+       # Display questions if quiz not submitted
+       if not st.session_state.get('quiz_submitted', False):
+           for index, question in enumerate(questions, start=1):
+               with st.container():
+                   st.markdown(f"""
+                   <div class="question-card">
+                       <h3>Question {index}</h3>
+                       <p>{question['question_text']}</p>
+                   </div>
+                   """, unsafe_allow_html=True)
                 
-                # Handle images
-                if 'image_url' in question and question['image_url']:
-                    image_urls = [url.strip() for url in question['image_url'].split(',')]
+                   # Handle images
+                   if 'image_url' in question and question['image_url']:
+                       image_urls = [url.strip() for url in question['image_url'].split(',')]
                     
-                    if len(image_urls) > 1:
-                        cols = st.columns(len(image_urls))
-                        for idx, url in enumerate(image_urls):
-                            if url:
-                                try:
-                                    cols[idx].image(url, use_column_width=True)
-                                except Exception as e:
-                                    cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
-                    else:
-                        try:
-                            st.image(image_urls[0], use_column_width=True)
-                        except Exception as e:
-                            st.error("Erreur de chargement de l'image")
+                       if len(image_urls) > 1:
+                           cols = st.columns(len(image_urls))
+                           for idx, url in enumerate(image_urls):
+                               if url:
+                                   try:
+                                       cols[idx].image(url, use_column_width=True)
+                                   except Exception as e:
+                                       cols[idx].error(f"Erreur de chargement de l'image {idx + 1}")
+                       else:
+                           try:
+                               st.image(image_urls[0], use_column_width=True)
+                           except Exception as e:
+                               st.error("Erreur de chargement de l'image")
 
-                # Handle answers
-                choices = [choice.strip() for choice in question.get("Choices", "").split(",")]
-                correct_answers = question.get("answer_text", "").split(",")
+                   # Handle answers
+                   choices = [choice.strip() for choice in question.get("Choices", "").split(",")]
+                   correct_answers = question.get("answer_text", "").split(",")
 
-                if len(correct_answers) == 1:
-                    answer = st.radio(
-                        "Sélectionnez votre réponse:",
-                        choices,
-                        key=f"radio_{index}"
-                    )
-                    if answer:
-                        st.session_state.user_answers[question["question_text"]] = [answer]
-                else:
-                    selected = st.multiselect(
-                        "Sélectionnez toutes les réponses appropriées:",
-                        choices,
-                        key=f"multiselect_{index}"
-                    )
-                    st.session_state.user_answers[question["question_text"]] = selected
+                   if len(correct_answers) == 1:
+                       answer = st.radio(
+                           "Sélectionnez votre réponse:",
+                           choices,
+                           key=f"radio_{index}"
+                       )
+                       if answer:
+                           st.session_state.user_answers[question["question_text"]] = [answer]
+                   else:
+                       selected = st.multiselect(
+                           "Sélectionnez toutes les réponses appropriées:",
+                           choices,
+                           key=f"multiselect_{index}"
+                       )
+                       st.session_state.user_answers[question["question_text"]] = selected
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if st.button("📝 Soumettre le Quiz", use_container_width=True):
-                st.session_state.quiz_submitted = True
-                st.experimental_rerun()
+           col1, col2, col3 = st.columns([1, 2, 1])
+           with col2:
+               if st.button("📝 Soumettre le Quiz", use_container_width=True):
+                   st.session_state.quiz_submitted = True
+                   st.experimental_rerun()
 
-    # Handle submission
-    if st.session_state.get('quiz_submitted', False):
-        correct_count, category_correct_count = calculate_results(
-            questions,
-            st.session_state.user_answers
-        )
-        display_results(correct_count, category_correct_count, len(questions))
+       # Handle submission
+       if st.session_state.get('quiz_submitted', False):
+           correct_count, category_correct_count = calculate_results(
+               questions,
+               st.session_state.user_answers
+           )
+           display_results(correct_count, category_correct_count, len(questions))
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if st.button("🔄 Recommencer le Quiz", use_container_width=True):
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
-                st.experimental_rerun()
+           col1, col2, col3 = st.columns([1, 2, 1])
+           with col2:
+               if st.button("🔄 Recommencer le Quiz", use_container_width=True):
+                   for key in list(st.session_state.keys()):
+                       del st.session_state[key]
+                   st.experimental_rerun()
    except Exception as e:
         logger.error(f"Error in main function: {e}")
         st.error(f"Une erreur est survenue: {e}")
