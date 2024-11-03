@@ -6,6 +6,9 @@ import random
 from datetime import datetime, timedelta
 import time
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 # Page configuration
 st.set_page_config(
     page_title="Quiz PL-300",
@@ -63,25 +66,43 @@ def initialize_firebase():
             "universe_domain": st.secrets["universe_domain"]
         })
         firebase_admin.initialize_app(cred)
+        logger.info("Firebase initialized successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Firebase initialization failed: {e}")
+        st.error(f"Error initializing Firebase: {e}")
+        return False
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_all_questions():
     """Fetch all questions from Firestore database."""
     try:
+        logger.info("Starting to fetch questions...")
+        
+        # Check if Firebase is initialized
+        if not initialize_firebase():
+            return []
+            
         db = firestore.client()
         questions_ref = db.collection("questions")
-        query_snapshot = questions_ref.get()
+        
+        # Add timeout to the query
+        query_snapshot = questions_ref.get(timeout=30)
 
         questions = []
         for doc in query_snapshot:
             question_data = doc.to_dict()
             questions.append(question_data)
 
+        logger.info(f"Successfully fetched {len(questions)} questions")
+        
         if not questions:
             st.warning("Aucune question trouvée dans la base de données.")
+            logger.warning("No questions found in database")
 
         return questions
     except Exception as e:
+        logger.error(f"Error fetching questions: {e}")
         st.error(f"Erreur lors de la récupération des questions: {e}")
         return []
 
@@ -229,8 +250,19 @@ def display_results(correct_count, category_correct_count, total_questions):
         st.progress(percentage/100)
 
 def main():
+    
     """Main application function."""
-    st.markdown("<h1 style='text-align: center;'>Quiz Certification PL-300</h1>", unsafe_allow_html=True)
+    try:
+        st.markdown("<h1 style='text-align: center;'>Quiz Certification PL-300</h1>", unsafe_allow_html=True)
+        
+        # Show loading message
+        with st.spinner('Chargement des questions...'):
+            # Initialize Firebase and fetch questions
+            questions = fetch_all_questions()
+            
+            if not questions:
+                st.error("Impossible de charger les questions. Veuillez réessayer.")
+                return
     
     # Initialize Firebase and timer
     initialize_firebase()
@@ -338,6 +370,9 @@ def main():
                 for key in list(st.session_state.keys()):
                     del st.session_state[key]
                 st.experimental_rerun()
+   except Exception as e:
+        logger.error(f"Error in main function: {e}")
+        st.error(f"Une erreur est survenue: {e}")
 
 if __name__ == "__main__":
     main()
