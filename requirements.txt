@@ -1,6 +1,5 @@
 streamlit
 firebase-admin
-random
 matplotlib
 numpy
 plotly
