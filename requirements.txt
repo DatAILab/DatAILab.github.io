@@ -1,5 +1,5 @@
-streamlit==1.17.0
-firebase-admin==5.2.0
-plotly==5.9.0
-numpy==1.23.5
-matplotlib==3.6.2
+streamlit
+firebase-admin
+matplotlib
+numpy
+plotly
