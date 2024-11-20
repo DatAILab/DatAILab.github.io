@@ -1,6 +1,7 @@
 from supabase import create_client, Client
 import streamlit as st
 import re
+import json
 
 # Initialize Supabase client
 url = "https://tjgmipyirpzarhhmihxf.supabase.co"
@@ -21,6 +22,27 @@ def is_safe_query(query: str) -> tuple[bool, str]:
         return False, "⚠️ DROP queries are not allowed in this application."
 
     return True, "Query is safe"
+
+
+def handle_error_message(error):
+    """
+    Handle different types of error messages and return a clean message for DROP queries
+    """
+    try:
+        # Try to parse the error message if it's a string representation of a dict
+        if isinstance(error, str) and error.startswith("{"):
+            error_dict = json.loads(error.replace("'", '"'))
+            if 'code' in error_dict and error_dict['code'] == '2BP01':
+                return "⚠️ DROP queries are not allowed in this application."
+        # If the error is already a dict
+        elif isinstance(error, dict) and error.get('code') == '2BP01':
+            return "⚠️ DROP queries are not allowed in this application."
+        # Check if it's a drop-related error message
+        elif isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
+            return "⚠️ DROP queries are not allowed in this application."
+    except:
+        pass
+    return str(error)
 
 
 # Streamlit application layout
@@ -63,12 +85,8 @@ if try_query and query:
                 st.success("Query executed successfully.")
 
         except Exception as e:
-            error_message = str(e)
-            # Check if the error is related to a DROP query that passed the initial check
-            if "drop" in error_message.lower():
-                st.error("⚠️ DROP queries are not allowed in this application.")
-            else:
-                st.error(f"Error: {error_message}")
+            clean_error = handle_error_message(e.args[0] if e.args else str(e))
+            st.error(clean_error)
 
 # Submit Query functionality
 if submit_query and query:
@@ -84,12 +102,8 @@ if submit_query and query:
             st.success(f"Query '{query}' has been submitted!")
 
         except Exception as e:
-            error_message = str(e)
-            # Check if the error is related to a DROP query that passed the initial check
-            if "drop" in error_message.lower():
-                st.error("⚠️ DROP queries are not allowed in this application.")
-            else:
-                st.error(f"Error: {error_message}")
+            clean_error = handle_error_message(e.args[0] if e.args else str(e))
+            st.error(clean_error)
 
 # Display submitted queries
 if st.session_state.submitted_queries:
