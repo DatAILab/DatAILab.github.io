@@ -20,11 +20,18 @@ def is_safe_query(query: str) -> tuple[bool, str]:
     if re.search(r'\bDROP\b', query_upper):
         return False, "DROP queries are not allowed for security reasons."
 
-    # Add additional checks if needed, for example:
-    # if re.search(r'\bTRUNCATE\b', query_upper):
-    #     return False, "TRUNCATE queries are not allowed."
-
     return True, "Query is safe"
+
+
+def format_stored_procedure_call(query: str) -> str:
+    """
+    Format stored procedure calls to work with Supabase.
+    """
+    # Check if this is a stored procedure call
+    if query.strip().upper().startswith('CALL'):
+        # Replace @ with $ for parameter references
+        query = query.replace('@', '$')
+    return query
 
 
 # Streamlit application layout
@@ -34,8 +41,8 @@ st.title("SQL Query Editor")
 if 'submitted_queries' not in st.session_state:
     st.session_state.submitted_queries = []
 
-# Single input field for SQL queries
-query = st.text_input("Enter your SQL query:")
+# Text area for SQL queries with increased height
+query = st.text_area("Enter your SQL query:", height=200)
 
 # Columns for buttons
 col1, col2 = st.columns(2)
@@ -55,10 +62,13 @@ if try_query and query:
         st.error(message)
     else:
         try:
-            if query.strip().upper().startswith("SELECT"):
-                response = supabase.rpc("execute_returning_sql", {"query_text": query}).execute()
+            # Format the query if it's a stored procedure
+            formatted_query = format_stored_procedure_call(query)
+
+            if formatted_query.strip().upper().startswith("SELECT"):
+                response = supabase.rpc("execute_returning_sql", {"query_text": formatted_query}).execute()
             else:
-                response = supabase.rpc("execute_non_returning_sql", {"query_text": query}).execute()
+                response = supabase.rpc("execute_non_returning_sql", {"query_text": formatted_query}).execute()
 
             if hasattr(response, 'data') and response.data:
                 st.write("Query Results:")
@@ -69,7 +79,7 @@ if try_query and query:
         except Exception as e:
             st.error(f"Error: {str(e)}")
             st.write("Debug info:")
-            st.write(f"Query attempted: {query}")
+            st.write(f"Query attempted: {formatted_query}")
 
 # Submit Query functionality
 if submit_query and query:
