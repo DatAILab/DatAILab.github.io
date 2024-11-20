@@ -18,11 +18,7 @@ def is_safe_query(query: str) -> tuple[bool, str]:
 
     # Check for DROP statements
     if re.search(r'\bDROP\b', query_upper):
-        return False, "DROP queries are not allowed for security reasons."
-
-    # Add additional checks if needed, for example:
-    # if re.search(r'\bTRUNCATE\b', query_upper):
-    #     return False, "TRUNCATE queries are not allowed."
+        return False, "⚠️ DROP queries are not allowed in this application."
 
     return True, "Query is safe"
 
@@ -67,9 +63,12 @@ if try_query and query:
                 st.success("Query executed successfully.")
 
         except Exception as e:
-            st.error(f"Error: {str(e)}")
-            st.write("Debug info:")
-            st.write(f"Query attempted: {query}")
+            error_message = str(e)
+            # Check if the error is related to a DROP query that passed the initial check
+            if "drop" in error_message.lower():
+                st.error("⚠️ DROP queries are not allowed in this application.")
+            else:
+                st.error(f"Error: {error_message}")
 
 # Submit Query functionality
 if submit_query and query:
@@ -85,7 +84,12 @@ if submit_query and query:
             st.success(f"Query '{query}' has been submitted!")
 
         except Exception as e:
-            st.error(f"Error submitting query: {str(e)}")
+            error_message = str(e)
+            # Check if the error is related to a DROP query that passed the initial check
+            if "drop" in error_message.lower():
+                st.error("⚠️ DROP queries are not allowed in this application.")
+            else:
+                st.error(f"Error: {error_message}")
 
 # Display submitted queries
 if st.session_state.submitted_queries:
