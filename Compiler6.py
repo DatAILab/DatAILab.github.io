@@ -1,31 +1,10 @@
 from supabase import create_client, Client
 import streamlit as st
-import re
 
 # Initialize Supabase client
 url = "https://tjgmipyirpzarhhmihxf.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqZ21pcHlpcnB6YXJoaG1paHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NzQ2MDEsImV4cCI6MjA0NzI1MDYwMX0.LNMUqA0-t6YtUKP6oOTXgVGYLu8Tpq9rMhH388SX4bI"
 supabase: Client = create_client(url, key)
-
-
-def is_safe_query(query: str) -> tuple[bool, str]:
-    """
-    Validate if the query is safe to execute.
-    Returns a tuple of (is_safe, message).
-    """
-    # Convert to uppercase for consistent checking
-    query_upper = query.strip().upper()
-
-    # Check for DROP statements
-    if re.search(r'\bDROP\b', query_upper):
-        return False, "DROP queries are not allowed for security reasons."
-
-    # Add additional checks if needed, for example:
-    # if re.search(r'\bTRUNCATE\b', query_upper):
-    #     return False, "TRUNCATE queries are not allowed."
-
-    return True, "Query is safe"
-
 
 # Streamlit application layout
 st.title("SQL Query Editor")
@@ -46,13 +25,15 @@ with col1:
 with col2:
     submit_query = st.button("Submit Query")
 
+# Function to check for restricted queries
+def is_query_restricted(query):
+    restricted_keywords = ["DROP", "DELETE", "TRUNCATE", "ALTER"]
+    return any(keyword in query.strip().upper() for keyword in restricted_keywords)
+
 # Try Query functionality
 if try_query and query:
-    # Validate query before execution
-    is_safe, message = is_safe_query(query)
-
-    if not is_safe:
-        st.error(message)
+    if is_query_restricted(query):
+        st.error("Error: This query is restricted and cannot be executed.")
     else:
         try:
             if query.strip().upper().startswith("SELECT"):
@@ -73,11 +54,8 @@ if try_query and query:
 
 # Submit Query functionality
 if submit_query and query:
-    # Validate query before submission
-    is_safe, message = is_safe_query(query)
-
-    if not is_safe:
-        st.error(message)
+    if is_query_restricted(query):
+        st.error("Error: This query is restricted and cannot be submitted.")
     else:
         try:
             # Add query to submitted queries list
