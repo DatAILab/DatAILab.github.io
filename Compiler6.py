@@ -18,24 +18,13 @@ def is_safe_query(query: str) -> tuple[bool, str]:
 
     # Check for DROP statements
     if re.search(r'\bDROP\b', query_upper):
-        return False, "⚠️ DROP queries are not allowed in this application."
+        return False, "DROP queries are not allowed for security reasons."
+
+    # Add additional checks if needed, for example:
+    # if re.search(r'\bTRUNCATE\b', query_upper):
+    #     return False, "TRUNCATE queries are not allowed."
 
     return True, "Query is safe"
-
-
-def handle_error_message(error):
-    """
-    Handle different types of error messages and return a clean message for DROP queries
-    """
-    # Check if the error is a string and contains 'DROP' or specific error code
-    if isinstance(error, str) and ('drop' in error.lower() or '2BP01' in error):
-        return "⚠️ DROP queries are not allowed in this application."
-
-    # If the error is a dictionary, check for the specific code
-    if isinstance(error, dict) and error.get('code') == '2BP01':
-        return "⚠️ DROP queries are not allowed in this application."
-
-    return str(error)
 
 
 # Streamlit application layout
@@ -78,9 +67,9 @@ if try_query and query:
                 st.success("Query executed successfully.")
 
         except Exception as e:
-            # Use the error message handling function
-            clean_error = handle_error_message(e.args[0] if e.args else str(e))
-            st.error(clean_error)
+            st.error(f"Error: {str(e)}")
+            st.write("Debug info:")
+            st.write(f"Query attempted: {query}")
 
 # Submit Query functionality
 if submit_query and query:
@@ -96,9 +85,7 @@ if submit_query and query:
             st.success(f"Query '{query}' has been submitted!")
 
         except Exception as e:
-            # Use the error message handling function
-            clean_error = handle_error_message(e.args[0] if e.args else str(e))
-            st.error(clean_error)
+            st.error(f"Error submitting query: {str(e)}")
 
 # Display submitted queries
 if st.session_state.submitted_queries:
