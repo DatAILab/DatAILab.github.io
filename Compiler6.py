@@ -1,7 +1,6 @@
 from supabase import create_client, Client
 import streamlit as st
 import re
-import json
 
 # Initialize Supabase client
 url = "https://tjgmipyirpzarhhmihxf.supabase.co"
@@ -28,11 +27,11 @@ def handle_error_message(error):
     """
     Handle different types of error messages and return a clean message for DROP queries
     """
-    # Check if it's a drop-related error message
-    if isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
+    # Check if the error is a string and contains 'DROP' or specific error code
+    if isinstance(error, str) and ('drop' in error.lower() or '2BP01' in error):
         return "⚠️ DROP queries are not allowed in this application."
 
-    # Check if the error is a dictionary and contains the specific code for DROP
+    # If the error is a dictionary, check for the specific code
     if isinstance(error, dict) and error.get('code') == '2BP01':
         return "⚠️ DROP queries are not allowed in this application."
 
