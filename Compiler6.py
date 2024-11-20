@@ -29,16 +29,8 @@ def handle_error_message(error):
     Handle different types of error messages and return a clean message for DROP queries
     """
     try:
-        # Try to parse the error message if it's a string representation of a dict
-        if isinstance(error, str) and error.startswith("{"):
-            error_dict = json.loads(error.replace("'", '"'))
-            if 'code' in error_dict and error_dict['code'] == '2BP01':
-                return "⚠️ DROP queries are not allowed in this application."
-        # If the error is already a dict
-        elif isinstance(error, dict) and error.get('code') == '2BP01':
-            return "⚠️ DROP queries are not allowed in this application."
         # Check if it's a drop-related error message
-        elif isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
+        if isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
             return "⚠️ DROP queries are not allowed in this application."
     except:
         pass
