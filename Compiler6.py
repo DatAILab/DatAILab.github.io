@@ -28,12 +28,14 @@ def handle_error_message(error):
     """
     Handle different types of error messages and return a clean message for DROP queries
     """
-    try:
-        # Check if it's a drop-related error message
-        if isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
-            return "⚠️ DROP queries are not allowed in this application."
-    except:
-        pass
+    # Check if it's a drop-related error message
+    if isinstance(error, str) and ('drop' in error.lower() or 'BP01' in error):
+        return "⚠️ DROP queries are not allowed in this application."
+
+    # Check if the error is a dictionary and contains the specific code for DROP
+    if isinstance(error, dict) and error.get('code') == '2BP01':
+        return "⚠️ DROP queries are not allowed in this application."
+
     return str(error)
 
 
@@ -77,6 +79,7 @@ if try_query and query:
                 st.success("Query executed successfully.")
 
         except Exception as e:
+            # Use the error message handling function
             clean_error = handle_error_message(e.args[0] if e.args else str(e))
             st.error(clean_error)
 
@@ -94,6 +97,7 @@ if submit_query and query:
             st.success(f"Query '{query}' has been submitted!")
 
         except Exception as e:
+            # Use the error message handling function
             clean_error = handle_error_message(e.args[0] if e.args else str(e))
             st.error(clean_error)
 
