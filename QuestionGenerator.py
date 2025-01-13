@@ -140,12 +140,12 @@ def main():
                 for idx, url in enumerate(image_urls):
                     if url:  # Vérification si l'URL n'est pas vide
                         try:
-                            cols[idx].image(url, caption=f'Image {idx + 1}', use_column_width=True)
+                            cols[idx].image(url, caption=f'Image {idx + 1}', use_container_width=True)
                         except Exception as e:
                             cols[idx].error(f"Erreur de chargement de l'image {idx + 1}: {e}")
             else:  # Image unique
                 try:
-                    st.image(image_urls[0], caption='Image de la question', use_column_width=True)
+                    st.image(image_urls[0], caption='Image de la question', use_container_width=True)
                 except Exception as e:
                     st.error(f"Erreur de chargement de l'image: {e}")
 
@@ -285,7 +285,6 @@ def main():
                     del st.session_state[key]
                 # Rechargement de la page
                 st.experimental_rerun()
-
 
 if __name__ == "__main__":
     main()
